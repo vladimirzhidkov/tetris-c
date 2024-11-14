@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ncurses.h>
@@ -13,6 +12,32 @@
 // 	return str;
 // }
 
+
+
+static void scaleUp( char* src, char dst[][FRAME_WIDTH] )
+{
+	char (*s)[BOARD_WIDTH] = (char (*)[BOARD_WIDTH])src;
+
+	for (int srcRow = 0; srcRow < BOARD_HEIGHT; srcRow++)
+	{
+		for (int srcCol = 0; srcCol < BOARD_WIDTH; srcCol++) 
+		{
+			for (int y = 0; y < FRAME_CELL_HEIGHT; y++)
+			{
+				for (int x = 0; x < FRAME_CELL_WIDTH; x++)
+				{
+					int dstRow = srcRow * FRAME_CELL_HEIGHT + y;
+					int dstCol = srcCol * FRAME_CELL_WIDTH + x;
+
+					dst[dstRow][dstCol] = s[srcRow][srcCol];
+				}
+			}
+		}
+	}
+}
+
+
+
 View* createView( void )
 {
 	View* this = malloc( sizeof(View) );
@@ -26,8 +51,8 @@ View* createView( void )
 	curs_set(0);
 	timeout(0);
 	start_color();
-	// init_pair(0, COLOR_YELLOW, COLOR_YELLOW);
-	init_pair(1, COLOR_YELLOW, COLOR_YELLOW);
+	init_pair(1, COLOR_BLACK, COLOR_BLACK);
+	init_pair(2, COLOR_YELLOW, COLOR_YELLOW);
 
 	/* ncurses windows */
 	// this->wNextShape = newwin(
@@ -49,25 +74,27 @@ View* createView( void )
 
 void renderBoard(View* this, char* frame)
 {
+	scaleUp(frame, this->frame );
+
+	// Display
 	WINDOW* wBoard = this->wBoard;
 	wmove(wBoard, 0, 0);
-	// wclear(this->wBoard)
-	for (int i = 0; i < BOARD_LEN; ++i)
+	for (int i = 0; i < FRAME_LEN; ++i)
 	{
-		int value = frame[i];
-		// wattron(wBoard, COLOR_PAIR(value));
-		// wprintw(wBoard, cell);
-		wprintw(wBoard, "%d", value);
-		// wattroff(wBoard, COLOR_PAIR(value));
+		char value = ((char *)this->frame)[i] + 1;
+		wattron(wBoard, COLOR_PAIR(value));
+		waddch(wBoard, ' ');
+		// wprintw(wBoard, "%d", value);
+		wattroff(wBoard, COLOR_PAIR(value));
 	}
-	// // box(wBoard, 0, 0);
+	// waddstr(this->wBoard, buffer);
 	wrefresh(wBoard);
 }
 
 void renderScore(View* this, int level, int lines, int score)
 {
 	WINDOW* wScore = this->wScore;
-	// wclear(wScore);
+	wmove(wScore, 0, 0);
 	wattrset(wScore, A_BOLD);
 	wprintw(wScore, "Level: %d\n", level);
 	wprintw(wScore, "Lines: %d\n", lines);

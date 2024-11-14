@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include "shared.h"
 #include "model.h"
 
 
@@ -16,33 +17,33 @@
 static const char tetroPool[TETROPOOL_SIZE][TETROMINO_SIZE][TETROMINO_SIZE] =
 {
 	{ /* I shape */
-		{1, 1, 1, 1},
 		{0, 0, 0, 0},
+		{1, 1, 1, 1},
 		{0, 0, 0, 0},
 		{0, 0, 0, 0}
 	},
 	{ /* square shape */
-		{0, 1, 1, 0},
-		{0, 1, 1, 0},
 		{0, 0, 0, 0},
+		{0, 1, 1, 0},
+		{0, 1, 1, 0},
 		{0, 0, 0, 0}
 	},
 	{ /* T shape */
+		{0, 0, 0, 0},
 		{1, 1, 1, 0},
 		{0, 1, 0, 0},
-		{0, 0, 0, 0},
 		{0, 0, 0, 0}
 	},
 	{ /* S shape */
+		{0, 0, 0, 0},
 		{0, 0, 1, 1},
 		{0, 1, 1, 0},
-		{0, 0, 0, 0},
 		{0, 0, 0, 0}
 	},
 	{ /* zigzag shape */
+		{0, 0, 0, 0},
 		{1, 1, 0, 0},
 		{0, 1, 1, 0},
-		{0, 0, 0, 0},
 		{0, 0, 0, 0}
 	},
 	{ /* J shape */
@@ -100,16 +101,6 @@ static void reverseColumns( char tetromino[][TETROMINO_SIZE] )
 }
 
 
-
-
-
-
-
-
-
-
-
-
 /* Clears any full rows in the board and shifts rows down accordingly.
  * A row is considered full when all its cells are occupied.
  * Returns the number of rows that were cleared.
@@ -151,6 +142,11 @@ static int clearFullRows( char board[][BOARD_WIDTH] )
 	return clearedRowsCount;
 }
 
+
+
+
+
+
 /* Fixes the tetromino to the board by setting occupied cells to 1.
  * The tetromino's position (x,y) determines where it is placed on the board.
  */
@@ -166,7 +162,6 @@ static void fixTetrominoToBoard( char board[][BOARD_WIDTH], char tetromino[][TET
 			}
 		}
 	}
-	// clearFullRows(board);
 }
 
 static bool detectCollision( char board[][BOARD_WIDTH], char tetromino[][TETROMINO_SIZE], int tetrominoX, int tetrominoY )
@@ -181,15 +176,17 @@ static bool detectCollision( char board[][BOARD_WIDTH], char tetromino[][TETROMI
 				int boardX = tetrominoX + cellX;
 				int boardY = tetrominoY + cellY;
 
-				/* check the current tetro cell for collision or being outside of grid */
-				bool isOutsideGrid = boardX < 0 || boardX >= BOARD_WIDTH || boardY >= BOARD_HEIGHT;
+				bool isOutside = boardX < 0 || boardX >= BOARD_WIDTH || boardY >= BOARD_HEIGHT;
 				bool isCollided = board[boardY][boardX];
-				
-				return isOutsideGrid || isCollided;
+
+				if (isOutside || isCollided)
+				{
+					return true;
+				}
 			}
 		}
 	}
-	return 0;
+	return false;
 }
 
 
@@ -203,13 +200,16 @@ static bool detectCollision( char board[][BOARD_WIDTH], char tetromino[][TETROMI
 Game* createGame( void )
 {
 	Game* this = malloc( sizeof(Game) );
-	
-	memset(this->tetromino, 0, TETROMINO_LEN);
+
+	/* initialize tetromino and its position */
+	memset( this->tetromino, 0, TETROMINO_LEN );
 	this->tetrominoX = 0;
 	this->tetrominoY = 0;
 	
-	memset(this->board, 0, BOARD_LEN);
+	/* initialize board */
+	memset( this->board, 0, BOARD_LEN );
 
+	/* initialize game stats */
 	this->score = 0;
 	this->level = 0;
 	this->clearedLinesCount = 0;
@@ -221,7 +221,6 @@ void spawnTetromino( Game* this )
 {
 	/* randomize the tetromino */
 	int randomIndex = rand() % TETROPOOL_SIZE;
-	// char* src = (char* )tetroPool[ randomIndex ];
 	memcpy(this->tetromino, tetroPool[randomIndex], TETROMINO_LEN);
 
 	/* set the tetromino to the center of the board */
@@ -255,6 +254,7 @@ void moveDown( Game* this )
 	if ( detectCollision(this->board, this->tetromino, this->tetrominoX, this->tetrominoY + 1) )
 	{
 		fixTetrominoToBoard(this->board, this->tetromino, this->tetrominoX, this->tetrominoY);
+		this->clearedLinesCount += clearFullRows(this->board);
 		spawnTetromino(this);
 	}
 	else

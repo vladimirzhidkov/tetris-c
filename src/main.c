@@ -67,14 +67,14 @@ void startGameLoop( Game* g, View* v )
 					default: /* handle unexpected input */ break;
 				}
 				renderBoard(v, getBoardFrame(g));
-				// renderScore(v, g->level, g->clearedLinesCount, g->score);
+				renderScore(v, g->level, g->clearedLinesCount, g->score);
 			}
 		}
 
 		// drop the tetromino by one step
 		moveDown(g);
 		renderBoard(v, getBoardFrame(g));
-		// renderScore(v, g->level, g->clearedLinesCount, g->score);
+		renderScore(v, g->level, g->clearedLinesCount, g->score);
 	}
 }
 
