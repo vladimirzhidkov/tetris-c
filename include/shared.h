@@ -1,13 +1,10 @@
 #ifndef SHARED_H
 #define SHARED_H
 
-#define TETROMINO_SIZE      4
-#define TETROMINO_LEN       TETROMINO_SIZE * TETROMINO_SIZE
+void transpose( char* matrix, int size );
+void reverseRows( char* matrix, int size );
+void reverseColumns( char* matrix, int size );
 
-#define BOARD_HEIGHT        15
-#define BOARD_WIDTH         10
-#define BOARD_LEN           BOARD_HEIGHT * BOARD_WIDTH 
-
-
+long long currentTimeMs( void );
 
 #endif /* SHARED_H */

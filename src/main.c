@@ -1,80 +1,72 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/time.h>
 #include "model.h"
 #include "view.h"
+#include "shared.h"
 
-#define CTRL_MOVELEFT 'a'
-#define CTRL_MOVERIGHT 'd'
-#define CTRL_MOVEDOWN 's'
-#define CTRL_ROTATE 'w'
 #define CTRL_QUIT 'q'
+#define DELAY_BASE_MS 1000
+#define DELAY_REDUCTION_MS 90
 
-#define UPDATE_RATE_BASE_MS 1000
-#define UPDATE_RATE_REDUCTION_MS 90
+Game* GAME;
+View* VIEW;
 
-void startGameLoop( Game* g, View* v );
-
-static long long current_time_ms()
+void onEventStatsChanged( void )
 {
-	struct timeval time;
-	gettimeofday(&time, NULL);
-	return (long long)time.tv_sec * 1000 + time.tv_usec / 1000;
+	renderGameStats(VIEW, GAME->level, GAME->clearedLinesCount, GAME->score);
 }
 
-void exitGame(Game* g, View* v)
+void onEventBoardChanged( void )
 {
-	destroyGame(g);
-	destroyView(v);
+	renderBoard(VIEW, getBoard(GAME));
+}
+
+void onEventGameOver( void )
+{
+	destroyGame(GAME);
+	destroyView(VIEW);
 	puts("\nGame Over\n");
 	exit(0);
 }
 
-int main()
-{
-	Game* g = createGame();
-	View* v = createView();
-	spawnTetromino(g);
-	renderScore(v, g->level, g->clearedLinesCount, g->score);
-	renderBoard(v, getBoardFrame(g));
-	startGameLoop(g, v);
-	return 0;
-}
-
-void startGameLoop( Game* g, View* v )
+void startGameLoop( void )
 {
 	while (1)
 	{
-		long long last_updated_time_ms = current_time_ms();
+		int delay = DELAY_BASE_MS - DELAY_REDUCTION_MS * GAME->level;
+		long long startTime = currentTimeMs();
+		long long elapsedTime = currentTimeMs() - startTime;
 
-		// loop for a bit, constantly reading from stdin
-		int update_rate = UPDATE_RATE_BASE_MS - UPDATE_RATE_REDUCTION_MS * g->level;
-
-		while (current_time_ms() - last_updated_time_ms < update_rate)
+		while ( elapsedTime < delay )
 		{
-			int key;
-
-			/* read input from stdin */
-			if ( (key = getch()) != ERR)
+			int keyPressed = getch();
+			if ( keyPressed != ERR )
 			{
-				switch (key)
+				switch (keyPressed)
 				{
-					case CTRL_MOVELEFT: moveLeft(g); break;
-					case CTRL_MOVERIGHT: moveRight(g); break;
-					case CTRL_MOVEDOWN: moveDown(g); break;
-					case CTRL_ROTATE: rotateClockwise(g); break;
-					case CTRL_QUIT: exitGame(g, v); break;
-					default: /* handle unexpected input */ break;
+					case KEY_LEFT: moveLeft(GAME); break;
+					case KEY_RIGHT: moveRight(GAME); break;
+					case KEY_DOWN: moveDown(GAME); break;
+					case KEY_UP: rotateClockwise(GAME); break;
+					case CTRL_QUIT: onEventGameOver(); break;
 				}
-				renderBoard(v, getBoardFrame(g));
-				renderScore(v, g->level, g->clearedLinesCount, g->score);
 			}
+			elapsedTime = currentTimeMs() - startTime;
 		}
-
-		// drop the tetromino by one step
-		moveDown(g);
-		renderBoard(v, getBoardFrame(g));
-		renderScore(v, g->level, g->clearedLinesCount, g->score);
+		moveDown(GAME);
 	}
 }
 
+int main()
+{
+	GAME = createGame();
+	GAME->eventStatsChanged = onEventStatsChanged;
+	GAME->eventBoardChanged = onEventBoardChanged;
+	GAME->eventGameOver = onEventGameOver;
+	VIEW = createView();
+	spawnTetromino(GAME);
+	renderGameStats(VIEW, GAME->level, GAME->clearedLinesCount, GAME->score);
+	renderBoard(VIEW, getBoard(GAME));
+	startGameLoop();
+	return 0;
+}

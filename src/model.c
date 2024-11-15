@@ -1,6 +1,8 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <time.h>
 #include "shared.h"
 #include "model.h"
 
@@ -14,7 +16,7 @@
 // 	SCORE_BASE * 8  /* 4 line(s) cleared */
 // };
 
-static const char tetroPool[TETROPOOL_SIZE][TETROMINO_SIZE][TETROMINO_SIZE] =
+static const TetroPool tetroPool =
 {
 	{ /* I shape */
 		{0, 0, 0, 0},
@@ -61,51 +63,11 @@ static const char tetroPool[TETROPOOL_SIZE][TETROMINO_SIZE][TETROMINO_SIZE] =
 };
 
 
-static void transpose( char tetromino[][TETROMINO_SIZE] )
-{
-	for (int i = 0; i < TETROMINO_SIZE; i++)
-	{
-		for (int j = i + 1; j < TETROMINO_SIZE; j++)
-		{
-			char temp = tetromino[i][j];
-			tetromino[i][j] = tetromino[j][i];
-			tetromino[j][i] = temp;
-		}
-	}
-}
-
-static void reverseRows( char tetromino[][TETROMINO_SIZE] )
-{
-	for (int i = 0; i < TETROMINO_SIZE; i++)
-	{
-		for (int j = 0, k = TETROMINO_SIZE - 1; j < k; j++, k--)
-		{
-			char temp = tetromino[i][j];
-			tetromino[i][j] = tetromino[i][k];
-			tetromino[i][k] = temp;
-		}
-	}
-}
-
-static void reverseColumns( char tetromino[][TETROMINO_SIZE] )
-{
-	for (int i = 0; i < TETROMINO_SIZE; i++)
-	{
-		for (int j = 0, k = TETROMINO_SIZE - 1; j < k; j++, k--)
-		{
-			char temp = tetromino[j][i];
-			tetromino[j][i] = tetromino[k][i];
-			tetromino[k][i] = temp;
-		}
-	}
-}
-
-
 /* Clears any full rows in the board and shifts rows down accordingly.
  * A row is considered full when all its cells are occupied.
  * Returns the number of rows that were cleared.
  */
-static int clearFullRows( char board[][BOARD_WIDTH] )
+static int clearFullRows( Board board )
 {
 	int clearedRowsCount = 0;
 
@@ -150,7 +112,7 @@ static int clearFullRows( char board[][BOARD_WIDTH] )
 /* Fixes the tetromino to the board by setting occupied cells to 1.
  * The tetromino's position (x,y) determines where it is placed on the board.
  */
-static void fixTetrominoToBoard( char board[][BOARD_WIDTH], char tetromino[][TETROMINO_SIZE], int tetrominoX, int tetrominoY )
+static void fixTetrominoToBoard( Board board, Tetromino tetromino, int tetrominoX, int tetrominoY )
 {
 	for (int cellY = 0; cellY < TETROMINO_SIZE; ++cellY)
 	{
@@ -164,7 +126,7 @@ static void fixTetrominoToBoard( char board[][BOARD_WIDTH], char tetromino[][TET
 	}
 }
 
-static bool detectCollision( char board[][BOARD_WIDTH], char tetromino[][TETROMINO_SIZE], int tetrominoX, int tetrominoY )
+static bool detectCollision( Board board, Tetromino tetromino, int tetrominoX, int tetrominoY )
 {
 	/* iterate through tetrocells of the current tetromino */
 	for (int cellY = 0; cellY < TETROMINO_SIZE; ++cellY)
@@ -191,28 +153,36 @@ static bool detectCollision( char board[][BOARD_WIDTH], char tetromino[][TETROMI
 
 
 
+static void incrementClearedLinesCount( Game* this, int increment )
+{
+	if (increment <= 0 || this->eventStatsChanged == NULL)
+	{
+		return;
+	}
+	this->clearedLinesCount += increment;
+	this->eventStatsChanged();
+}	
 
-/*********************************************************************/
-/*************************** GAME METHODS ****************************/
-/*********************************************************************/
 
+/*
+ ******************** PUBLIC METHODS ******************** 
+ */
 
 Game* createGame( void )
 {
 	Game* this = malloc( sizeof(Game) );
-
-	/* initialize tetromino and its position */
-	memset( this->tetromino, 0, TETROMINO_LEN );
-	this->tetrominoX = 0;
-	this->tetrominoY = 0;
 	
 	/* initialize board */
-	memset( this->board, 0, BOARD_LEN );
+	memset( this->staticBoard, 0, BOARD_LEN );
+	memset( this->activeBoard, 0, BOARD_LEN );
 
 	/* initialize game stats */
 	this->score = 0;
 	this->level = 0;
 	this->clearedLinesCount = 0;
+
+	/* initialize random seed */
+	srand(time(NULL));
 
 	return this;
 }
@@ -224,81 +194,95 @@ void spawnTetromino( Game* this )
 	memcpy(this->tetromino, tetroPool[randomIndex], TETROMINO_LEN);
 
 	/* set the tetromino to the center of the board */
-	this->tetrominoX = (BOARD_WIDTH - TETROMINO_SIZE) / 2;
-	this->tetrominoY = 0;
+	int tetrominoX = (BOARD_WIDTH - TETROMINO_SIZE) / 2;
+	int tetrominoY = 0;
 
-	if ( detectCollision(this->board, this->tetromino, this->tetrominoX, this->tetrominoY) )
+	if ( !detectCollision( this->staticBoard, this->tetromino, tetrominoX, tetrominoY) )
 	{
-		gameOver(this);
+		this->tetrominoX = tetrominoX;
+		this->tetrominoY = tetrominoY;
+		this->eventBoardChanged();
+	}
+	else
+	{
+		this->eventGameOver();
 	}
 }
 
 void moveLeft( Game* this )
 {
-	if ( !detectCollision(this->board, this->tetromino, this->tetrominoX - 1, this->tetrominoY) )
+	if ( !detectCollision(this->staticBoard, this->tetromino, this->tetrominoX - 1, this->tetrominoY) )
 	{
 		this->tetrominoX--;
+		this->eventBoardChanged();
 	}
 }
 
 void moveRight(Game* this)
 {
-	if ( !detectCollision(this->board, this->tetromino, this->tetrominoX + 1, this->tetrominoY) )
+	if ( !detectCollision(this->staticBoard, this->tetromino, this->tetrominoX + 1, this->tetrominoY) )
 	{
 		this->tetrominoX++;
+		this->eventBoardChanged();
 	}
 }
 
 void moveDown( Game* this )
 {
-	if ( detectCollision(this->board, this->tetromino, this->tetrominoX, this->tetrominoY + 1) )
+	if ( !detectCollision(this->staticBoard, this->tetromino, this->tetrominoX, this->tetrominoY + 1) )
 	{
-		fixTetrominoToBoard(this->board, this->tetromino, this->tetrominoX, this->tetrominoY);
-		this->clearedLinesCount += clearFullRows(this->board);
-		spawnTetromino(this);
+		this->tetrominoY++;
+		this->eventBoardChanged();
 	}
 	else
 	{
-		this->tetrominoY++;
+		fixTetrominoToBoard(this->staticBoard, this->tetromino, this->tetrominoX, this->tetrominoY);
+		int clearedLinesCount = clearFullRows(this->staticBoard);
+		incrementClearedLinesCount(this, clearedLinesCount);
+		spawnTetromino(this);
 	}
 }
 
 
 void rotateClockwise( Game* this )
 {
-	transpose(this->tetromino);
-	reverseRows(this->tetromino);
+	transpose( (char *) this->tetromino, TETROMINO_SIZE);
+	reverseRows( (char *) this->tetromino, TETROMINO_SIZE);
 
-	if (detectCollision(this->board, this->tetromino, this->tetrominoX, this->tetrominoY))
+	if ( !detectCollision(this->staticBoard, this->tetromino, this->tetrominoX, this->tetrominoY) )
 	{
-		transpose(this->tetromino);
-		reverseColumns(this->tetromino);
+		this->eventBoardChanged();
+	}
+	else
+	{
+		/* reverse changes */
+		transpose( (char *) this->tetromino, TETROMINO_SIZE);
+		reverseColumns( (char *) this->tetromino, TETROMINO_SIZE);
 	}
 }
 
 void rotateCounterClockwise( Game* this )
 {
-	transpose(this->tetromino);
-	reverseColumns(this->tetromino);
+	transpose( (char *) this->tetromino, TETROMINO_SIZE);
+	reverseColumns( (char *) this->tetromino, TETROMINO_SIZE);
 
-	if (detectCollision(this->board, this->tetromino, this->tetrominoX, this->tetrominoY))
+	if ( !detectCollision(this->activeBoard, this->tetromino, this->tetrominoX, this->tetrominoY))
 	{
-		transpose(this->tetromino);
-		reverseRows(this->tetromino);
+		this->eventBoardChanged();
+	}
+	else
+	{
+		/* reverse changes */
+		transpose( (char *) this->tetromino, TETROMINO_SIZE);
+		reverseRows( (char *) this->tetromino, TETROMINO_SIZE);
 	}
 }
 
-char* getBoardFrame( Game* this )
+Board* getBoard( Game* this )
 {
-	memcpy(this->frame, this->board, BOARD_LEN);
-	fixTetrominoToBoard(this->frame, this->tetromino, this->tetrominoX, this->tetrominoY);
-	return (char* )this->frame;
-}
-
-void gameOver( Game* this )
-{
-	destroyGame(this);
-	exit(0);
+	memcpy(this->activeBoard, this->staticBoard, BOARD_LEN);
+	fixTetrominoToBoard(this->activeBoard, this->tetromino, this->tetrominoX, this->tetrominoY);
+	return & this->activeBoard;
 }
 
 void destroyGame( Game* this )

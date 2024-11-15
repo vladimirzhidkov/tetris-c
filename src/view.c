@@ -2,34 +2,21 @@
 #include <string.h>
 #include <ncurses.h>
 #include "view.h"
-
-
-// static char * str_repeat_char(char c, int n)
-// {
-// 	char* str = (char*)malloc((n + 1) * sizeof(char));
-// 	memset(str, c, n);
-// 	str[n] = 0;
-// 	return str;
-// }
-
-
-
-static void scaleUp( char* src, char dst[][FRAME_WIDTH] )
+#include "model.h"
+static void scaleUp( Board src, Frame dst )
 {
-	char (*s)[BOARD_WIDTH] = (char (*)[BOARD_WIDTH])src;
-
 	for (int srcRow = 0; srcRow < BOARD_HEIGHT; srcRow++)
 	{
 		for (int srcCol = 0; srcCol < BOARD_WIDTH; srcCol++) 
 		{
-			for (int y = 0; y < FRAME_CELL_HEIGHT; y++)
+			for (int cellRow = 0; cellRow < FRAME_CELL_HEIGHT; cellRow++)
 			{
-				for (int x = 0; x < FRAME_CELL_WIDTH; x++)
+				for (int cellCol = 0; cellCol < FRAME_CELL_WIDTH; cellCol++)
 				{
-					int dstRow = srcRow * FRAME_CELL_HEIGHT + y;
-					int dstCol = srcCol * FRAME_CELL_WIDTH + x;
+					int dstRow = srcRow * FRAME_CELL_HEIGHT + cellRow;
+					int dstCol = srcCol * FRAME_CELL_WIDTH + cellCol;
 
-					dst[dstRow][dstCol] = s[srcRow][srcCol];
+					dst[dstRow][dstCol] = src[srcRow][srcCol];
 				}
 			}
 		}
@@ -47,7 +34,7 @@ View* createView( void )
 	refresh();
 	cbreak();
 	noecho();
-	// keypad(stdscr, TRUE);
+	keypad(stdscr, TRUE); /* enable arrow keys */
 	curs_set(0);
 	timeout(0);
 	start_color();
@@ -72,26 +59,26 @@ View* createView( void )
 	return this;
 }
 
-void renderBoard(View* this, char* frame)
+void renderBoard( View* this, Board* board )
 {
-	scaleUp(frame, this->frame );
-
-	// Display
 	WINDOW* wBoard = this->wBoard;
 	wmove(wBoard, 0, 0);
-	for (int i = 0; i < FRAME_LEN; ++i)
+	scaleUp( *board, this->frame );
+
+	for (int row = 0; row < FRAME_HEIGHT; row++)
 	{
-		char value = ((char *)this->frame)[i] + 1;
-		wattron(wBoard, COLOR_PAIR(value));
-		waddch(wBoard, ' ');
-		// wprintw(wBoard, "%d", value);
-		wattroff(wBoard, COLOR_PAIR(value));
+		for (int col = 0; col < FRAME_WIDTH; col++)
+		{
+			char value = this->frame[row][col] + 1;
+			wattron(wBoard, COLOR_PAIR(value));
+			waddch(wBoard, ' ');
+			wattroff(wBoard, COLOR_PAIR(value));
+		}
 	}
-	// waddstr(this->wBoard, buffer);
 	wrefresh(wBoard);
 }
 
-void renderScore(View* this, int level, int lines, int score)
+void renderGameStats(View* this, int level, int lines, int score)
 {
 	WINDOW* wScore = this->wScore;
 	wmove(wScore, 0, 0);
