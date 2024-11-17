@@ -13,12 +13,17 @@ View* VIEW;
 
 void onEventStatsChanged( void )
 {
-	renderGameStats(VIEW, GAME->level, GAME->clearedLinesCount, GAME->score);
+	renderStats(VIEW, GAME->level, GAME->clearedLinesCount, GAME->score);
 }
 
 void onEventBoardChanged( void )
 {
 	renderBoard(VIEW, getBoard(GAME));
+}
+
+void onEventPieceChanged( void )
+{
+	renderNextPiece(VIEW, (char *)GAME->nextPiece);
 }
 
 void onEventGameOver( void )
@@ -62,11 +67,14 @@ int main()
 	GAME = createGame();
 	GAME->eventStatsChanged = onEventStatsChanged;
 	GAME->eventBoardChanged = onEventBoardChanged;
+	GAME->eventPieceChanged = onEventPieceChanged;
 	GAME->eventGameOver = onEventGameOver;
+
 	VIEW = createView();
-	spawnTetromino(GAME);
-	renderGameStats(VIEW, GAME->level, GAME->clearedLinesCount, GAME->score);
+	renderNextPiece(VIEW, (char *)GAME->nextPiece);
+	renderInstructions(VIEW, "Press 'q' to quit");
 	renderBoard(VIEW, getBoard(GAME));
+	renderStats(VIEW, GAME->level, GAME->clearedLinesCount, GAME->score);
 	startGameLoop();
 	return 0;
 }

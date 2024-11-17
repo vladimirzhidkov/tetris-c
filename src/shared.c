@@ -52,3 +52,26 @@ long long currentTimeMs( void )
 }
 
 
+void scaleUp( char* src, char* dst, int srcHeight, int srcWidth, int heightScale, int widthScale )
+{
+	int dstWidth = srcWidth * widthScale;
+	char (*src2d)[srcWidth] = (char (*)[srcWidth])src;
+	char (*dst2d)[dstWidth] = (char (*)[dstWidth])dst;
+
+	for (int srcRow = 0; srcRow < srcHeight; srcRow++)
+	{
+		for (int srcCol = 0; srcCol < srcWidth; srcCol++) 
+		{
+			for (int cellRow = 0; cellRow < heightScale; cellRow++)
+			{
+				for (int cellCol = 0; cellCol < widthScale; cellCol++)
+				{
+					int dstRow = srcRow * heightScale + cellRow;
+					int dstCol = srcCol * widthScale + cellCol;
+
+					dst2d[dstRow][dstCol] = src2d[srcRow][srcCol];
+				}
+			}
+		}
+	}
+}

@@ -6,62 +6,16 @@
 #include "shared.h"
 #include "model.h"
 
+static const int LINE_SCORE[] =
+	{ 0, SCORE_LINE_1, SCORE_LINE_2, SCORE_LINE_3, SCORE_LINE_4 };
 
-// static const int SCORE_BASE_VALUE[5] =
-// {
-// 	0,
-// 	SCORE_BASE * 1, /* 1 line(s) cleared */
-// 	SCORE_BASE * 3, /* 2 line(s) cleared */
-// 	SCORE_BASE * 5, /* 3 line(s) cleared */
-// 	SCORE_BASE * 8  /* 4 line(s) cleared */
-// };
+static Tetromino TETROPOOL[TETROPOOL_SIZE] =
+	{ I_SHAPE, T_SHAPE, S_SHAPE, Z_SHAPE, O_SHAPE, L_SHAPE, J_SHAPE };
 
-static const TetroPool tetroPool =
+static int calcScore( int lines, int level )
 {
-	{ /* I shape */
-		{0, 0, 0, 0},
-		{1, 1, 1, 1},
-		{0, 0, 0, 0},
-		{0, 0, 0, 0}
-	},
-	{ /* square shape */
-		{0, 0, 0, 0},
-		{0, 1, 1, 0},
-		{0, 1, 1, 0},
-		{0, 0, 0, 0}
-	},
-	{ /* T shape */
-		{0, 0, 0, 0},
-		{1, 1, 1, 0},
-		{0, 1, 0, 0},
-		{0, 0, 0, 0}
-	},
-	{ /* S shape */
-		{0, 0, 0, 0},
-		{0, 0, 1, 1},
-		{0, 1, 1, 0},
-		{0, 0, 0, 0}
-	},
-	{ /* zigzag shape */
-		{0, 0, 0, 0},
-		{1, 1, 0, 0},
-		{0, 1, 1, 0},
-		{0, 0, 0, 0}
-	},
-	{ /* J shape */
-		{0, 0, 1, 0},
-		{0, 0, 1, 0},
-		{0, 1, 1, 0},
-		{0, 0, 0, 0}
-	},
-	{ /* L shape */
-		{0, 1, 0, 0},
-		{0, 1, 0, 0},
-		{0, 1, 1, 0},
-		{0, 0, 0, 0}
-	}
-};
-
+	return LINE_SCORE[lines] * level;
+}
 
 /* Clears any full rows in the board and shifts rows down accordingly.
  * A row is considered full when all its cells are occupied.
@@ -105,38 +59,34 @@ static int clearFullRows( Board board )
 }
 
 
-
-
-
-
 /* Fixes the tetromino to the board by setting occupied cells to 1.
  * The tetromino's position (x,y) determines where it is placed on the board.
  */
-static void fixTetrominoToBoard( Board board, Tetromino tetromino, int tetrominoX, int tetrominoY )
+static void fixTetrominoToBoard( Board board, Tetromino* piece, int pieceX, int pieceY )
 {
 	for (int cellY = 0; cellY < TETROMINO_SIZE; ++cellY)
 	{
 		for (int cellX = 0; cellX < TETROMINO_SIZE; ++cellX)
 		{
-			if ( tetromino[cellY][cellX] )
+			if ( (*piece)[cellY][cellX] )
 			{
-				board[tetrominoY + cellY][tetrominoX + cellX] = 1;
+				board[pieceY + cellY][pieceX + cellX] = 1;
 			}
 		}
 	}
 }
 
-static bool detectCollision( Board board, Tetromino tetromino, int tetrominoX, int tetrominoY )
+static bool detectCollision( Board board, Tetromino* piece, int pieceX, int pieceY )
 {
 	/* iterate through tetrocells of the current tetromino */
 	for (int cellY = 0; cellY < TETROMINO_SIZE; ++cellY)
 	{
 		for (int cellX = 0; cellX < TETROMINO_SIZE; ++cellX)
 		{
-			if ( tetromino[cellY][cellX] )
+			if ( (*piece)[cellY][cellX] )
 			{
-				int boardX = tetrominoX + cellX;
-				int boardY = tetrominoY + cellY;
+				int boardX = pieceX + cellX;
+				int boardY = pieceY + cellY;
 
 				bool isOutside = boardX < 0 || boardX >= BOARD_WIDTH || boardY >= BOARD_HEIGHT;
 				bool isCollided = board[boardY][boardX];
@@ -151,7 +101,23 @@ static bool detectCollision( Board board, Tetromino tetromino, int tetrominoX, i
 	return false;
 }
 
+static void spawnTetromino( Game* this )
+{
+	this->piece = this->nextPiece;
+	this->nextPiece = & TETROPOOL[rand() % TETROPOOL_SIZE];
+	this->pieceX = (BOARD_WIDTH - TETROMINO_SIZE) / 2;
+	this->pieceY = 0;
 
+	if ( detectCollision( this->staticBoard, this->piece, this->pieceX, this->pieceY) )
+	{
+		this->eventGameOver();
+	}
+	else
+	{
+		this->eventBoardChanged();
+		this->eventPieceChanged();
+	}
+}
 
 static void incrementClearedLinesCount( Game* this, int increment )
 {
@@ -160,6 +126,8 @@ static void incrementClearedLinesCount( Game* this, int increment )
 		return;
 	}
 	this->clearedLinesCount += increment;
+	this->score += calcScore(increment, this->level);
+	this->level = (this->clearedLinesCount / LINES_PER_LEVEL) + 1;
 	this->eventStatsChanged();
 }	
 
@@ -171,72 +139,56 @@ static void incrementClearedLinesCount( Game* this, int increment )
 Game* createGame( void )
 {
 	Game* this = malloc( sizeof(Game) );
-	
+
+	/* initialize random seed */
+	srand(time(NULL));
+
+	/* initialize tetromino */
+	this->nextPiece = & TETROPOOL[rand() % TETROPOOL_SIZE];
+	this->piece = & TETROPOOL[rand() % TETROPOOL_SIZE];
+	this->pieceX = (BOARD_WIDTH - TETROMINO_SIZE) / 2;
+	this->pieceY = 0;
+
 	/* initialize board */
 	memset( this->staticBoard, 0, BOARD_LEN );
 	memset( this->activeBoard, 0, BOARD_LEN );
 
 	/* initialize game stats */
 	this->score = 0;
-	this->level = 0;
+	this->level = 1;
 	this->clearedLinesCount = 0;
-
-	/* initialize random seed */
-	srand(time(NULL));
 
 	return this;
 }
 
-void spawnTetromino( Game* this )
-{
-	/* randomize the tetromino */
-	int randomIndex = rand() % TETROPOOL_SIZE;
-	memcpy(this->tetromino, tetroPool[randomIndex], TETROMINO_LEN);
-
-	/* set the tetromino to the center of the board */
-	int tetrominoX = (BOARD_WIDTH - TETROMINO_SIZE) / 2;
-	int tetrominoY = 0;
-
-	if ( !detectCollision( this->staticBoard, this->tetromino, tetrominoX, tetrominoY) )
-	{
-		this->tetrominoX = tetrominoX;
-		this->tetrominoY = tetrominoY;
-		this->eventBoardChanged();
-	}
-	else
-	{
-		this->eventGameOver();
-	}
-}
-
 void moveLeft( Game* this )
 {
-	if ( !detectCollision(this->staticBoard, this->tetromino, this->tetrominoX - 1, this->tetrominoY) )
+	if ( !detectCollision(this->staticBoard, this->piece, this->pieceX - 1, this->pieceY) )
 	{
-		this->tetrominoX--;
+		this->pieceX--;
 		this->eventBoardChanged();
 	}
 }
 
 void moveRight(Game* this)
 {
-	if ( !detectCollision(this->staticBoard, this->tetromino, this->tetrominoX + 1, this->tetrominoY) )
+	if ( !detectCollision(this->staticBoard, this->piece, this->pieceX + 1, this->pieceY) )
 	{
-		this->tetrominoX++;
+		this->pieceX++;
 		this->eventBoardChanged();
 	}
 }
 
 void moveDown( Game* this )
 {
-	if ( !detectCollision(this->staticBoard, this->tetromino, this->tetrominoX, this->tetrominoY + 1) )
+	if ( !detectCollision(this->staticBoard, this->piece, this->pieceX, this->pieceY + 1) )
 	{
-		this->tetrominoY++;
+		this->pieceY++;
 		this->eventBoardChanged();
 	}
 	else
 	{
-		fixTetrominoToBoard(this->staticBoard, this->tetromino, this->tetrominoX, this->tetrominoY);
+		fixTetrominoToBoard(this->staticBoard, this->piece, this->pieceX, this->pieceY);
 		int clearedLinesCount = clearFullRows(this->staticBoard);
 		incrementClearedLinesCount(this, clearedLinesCount);
 		spawnTetromino(this);
@@ -246,43 +198,43 @@ void moveDown( Game* this )
 
 void rotateClockwise( Game* this )
 {
-	transpose( (char *) this->tetromino, TETROMINO_SIZE);
-	reverseRows( (char *) this->tetromino, TETROMINO_SIZE);
+	transpose( (char *) this->piece, TETROMINO_SIZE);
+	reverseRows( (char *) this->piece, TETROMINO_SIZE);
 
-	if ( !detectCollision(this->staticBoard, this->tetromino, this->tetrominoX, this->tetrominoY) )
+	if ( !detectCollision(this->staticBoard, this->piece, this->pieceX, this->pieceY) )
 	{
 		this->eventBoardChanged();
 	}
 	else
 	{
 		/* reverse changes */
-		transpose( (char *) this->tetromino, TETROMINO_SIZE);
-		reverseColumns( (char *) this->tetromino, TETROMINO_SIZE);
+		transpose( (char *) this->piece, TETROMINO_SIZE);
+		reverseColumns( (char *) this->piece, TETROMINO_SIZE);
 	}
 }
 
 void rotateCounterClockwise( Game* this )
 {
-	transpose( (char *) this->tetromino, TETROMINO_SIZE);
-	reverseColumns( (char *) this->tetromino, TETROMINO_SIZE);
+	transpose( (char *) this->piece, TETROMINO_SIZE);
+	reverseColumns( (char *) this->piece, TETROMINO_SIZE);
 
-	if ( !detectCollision(this->activeBoard, this->tetromino, this->tetrominoX, this->tetrominoY))
+	if ( !detectCollision(this->activeBoard, this->piece, this->pieceX, this->pieceY))
 	{
 		this->eventBoardChanged();
 	}
 	else
 	{
 		/* reverse changes */
-		transpose( (char *) this->tetromino, TETROMINO_SIZE);
-		reverseRows( (char *) this->tetromino, TETROMINO_SIZE);
+		transpose( (char *) this->piece, TETROMINO_SIZE);
+		reverseRows( (char *) this->piece, TETROMINO_SIZE);
 	}
 }
 
-Board* getBoard( Game* this )
+char* getBoard( Game* this )
 {
 	memcpy(this->activeBoard, this->staticBoard, BOARD_LEN);
-	fixTetrominoToBoard(this->activeBoard, this->tetromino, this->tetrominoX, this->tetrominoY);
-	return & this->activeBoard;
+	fixTetrominoToBoard(this->activeBoard, this->piece, this->pieceX, this->pieceY);
+	return (char *)this->activeBoard;
 }
 
 void destroyGame( Game* this )

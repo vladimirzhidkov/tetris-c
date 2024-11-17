@@ -3,27 +3,13 @@
 #include <ncurses.h>
 #include "view.h"
 #include "model.h"
-static void scaleUp( Board src, Frame dst )
-{
-	for (int srcRow = 0; srcRow < BOARD_HEIGHT; srcRow++)
-	{
-		for (int srcCol = 0; srcCol < BOARD_WIDTH; srcCol++) 
-		{
-			for (int cellRow = 0; cellRow < FRAME_CELL_HEIGHT; cellRow++)
-			{
-				for (int cellCol = 0; cellCol < FRAME_CELL_WIDTH; cellCol++)
-				{
-					int dstRow = srcRow * FRAME_CELL_HEIGHT + cellRow;
-					int dstCol = srcCol * FRAME_CELL_WIDTH + cellCol;
+#include "shared.h"
 
-					dst[dstRow][dstCol] = src[srcRow][srcCol];
-				}
-			}
-		}
-	}
-}
+#define scaleBoardUp(src, dst) \
+	scaleUp( src, dst, BOARD_HEIGHT, BOARD_WIDTH, CELL_HEIGHT, CELL_WIDTH )
 
-
+#define scalePieceUp(src, dst) \
+	scaleUp( src, dst, TETROMINO_SIZE, TETROMINO_SIZE, CELL_HEIGHT, CELL_WIDTH )
 
 View* createView( void )
 {
@@ -41,58 +27,74 @@ View* createView( void )
 	init_pair(1, COLOR_BLACK, COLOR_BLACK);
 	init_pair(2, COLOR_YELLOW, COLOR_YELLOW);
 
-	/* ncurses windows */
-	// this->wNextShape = newwin(
-	// 	VIEW_NEXTSHAPE_HEIGHT, VIEW_NEXTSHAPE_WIDTH, VIEW_NEXTSHAPE_Y, VIEW_NEXTSHAPE_X);
+	/* Next Piece window */
+	this->wNextPiece = newwin(
+	 	W_NEXTPIECE_HEIGHT, W_NEXTPIECE_WIDTH, W_NEXTPIECE_Y, W_NEXTPIECE_X);
 
-
-
-	/* Create Game Board window with box around it */
-	this->wBoardBox = newwin(VIEW_BOARDBOX_HEIGHT, VIEW_BOARDBOX_WIDTH, VIEW_BOARDBOX_Y, VIEW_BOARDBOX_X);
+	/* Game Board window with box around it */
+	this->wBoardBox = newwin(W_BOARD_HEIGHT, W_BOARD_WIDTH, W_BOARD_Y, W_BOARD_X);
 	box(this->wBoardBox, 0, 0);
 	wrefresh(this->wBoardBox);
-	this->wBoard = derwin( this->wBoardBox, VIEW_BOARD_HEIGHT, VIEW_BOARD_WIDTH, VIEW_BOARD_MARGIN, VIEW_BOARD_MARGIN);
+	this->wBoard = derwin( this->wBoardBox, F_BOARD_HEIGHT, F_BOARD_WIDTH, W_BOARD_MARGIN, W_BOARD_MARGIN);
 	wrefresh(this->wBoard);
 
-	this->wScore = newwin(VIEW_SCORE_HEIGHT, VIEW_SCORE_WIDTH, VIEW_SCORE_Y, VIEW_SCORE_X);
-	// this->wInstructions = newwin(VIEW_INSTRUCTIONS_HEIGHT, VIEW_INSTRUCTIONS_WIDTH, VIEW_INSTRUCTIONS_Y, VIEW_INSTRUCTIONS_X);
+	/* Stats window */
+	this->wStats = newwin(W_STATS_HEIGHT, W_STATS_WIDTH, W_STATS_Y, W_STATS_X);
+
+	/* Instructions window */
+	this->wInstructions = newwin(
+		W_INSTRUCTIONS_HEIGHT, W_INSTRUCTIONS_WIDTH, W_INSTRUCTIONS_Y, W_INSTRUCTIONS_X);
+
 	return this;
 }
 
-void renderBoard( View* this, Board* board )
+void renderBoard( View* this, char* board )
 {
-	WINDOW* wBoard = this->wBoard;
-	wmove(wBoard, 0, 0);
-	scaleUp( *board, this->frame );
+	scaleBoardUp( board, this->boardFrame );
+	wmove(this->wBoard, 0, 0);
 
-	for (int row = 0; row < FRAME_HEIGHT; row++)
+	for (int i = 0; i < F_BOARD_LEN; ++i)
 	{
-		for (int col = 0; col < FRAME_WIDTH; col++)
-		{
-			char value = this->frame[row][col] + 1;
-			wattron(wBoard, COLOR_PAIR(value));
-			waddch(wBoard, ' ');
-			wattroff(wBoard, COLOR_PAIR(value));
-		}
+		char value = this->boardFrame[i] + 1;
+		wattron(this->wBoard, COLOR_PAIR(value));
+		waddch(this->wBoard, ' ');
+		wattroff(this->wBoard, COLOR_PAIR(value));
 	}
-	wrefresh(wBoard);
+	wrefresh(this->wBoard);
 }
 
-void renderGameStats(View* this, int level, int lines, int score)
+void renderNextPiece(View* this, char* piece)
 {
-	WINDOW* wScore = this->wScore;
-	wmove(wScore, 0, 0);
-	wattrset(wScore, A_BOLD);
-	wprintw(wScore, "Level: %d\n", level);
-	wprintw(wScore, "Lines: %d\n", lines);
-	wprintw(wScore, "Score: %d\n", score);
-	wrefresh(wScore);
+	scalePieceUp( (char *)piece, this->nextPieceFrame );
+	wmove(this->wNextPiece, 0, 0);
+	wattrset(this->wNextPiece, A_BOLD);
+	waddstr(this->wNextPiece, "Next Piece:\n\n");
+
+	for (int i = 0; i < F_NEXTPIECE_LEN; ++i)
+	{
+		char value = this->nextPieceFrame[i] + 1;
+		wattron(this->wNextPiece, COLOR_PAIR(value));
+		waddch(this->wNextPiece, ' ');
+		wattroff(this->wNextPiece, COLOR_PAIR(value));
+	}
+	wrefresh(this->wNextPiece);
+}
+
+void renderStats(View* this, int level, int lines, int score)
+{
+	WINDOW* wStats = this->wStats;
+	wmove(wStats, 0, 0);
+	wattrset(wStats, A_BOLD);
+	wprintw(wStats, "Level: %d\n", level);
+	wprintw(wStats, "Lines: %d\n", lines);
+	wprintw(wStats, "Score: %d\n", score);
+	wrefresh(wStats);
 }
 
 void renderInstructions(View* this, char* instructions)
 {
 	WINDOW* wInstructions = this->wInstructions;
-	wclear(wInstructions);
+	wmove(wInstructions, 0, 0);
 	wattrset(wInstructions, A_BOLD);
 	wprintw(wInstructions, "%s", instructions);
 	wrefresh(wInstructions);
@@ -100,10 +102,11 @@ void renderInstructions(View* this, char* instructions)
 
 void destroyView(View* this)
 {
-	delwin(this->wNextShape);
+	delwin(this->wNextPiece);
 	delwin(this->wBoard);
 	delwin(this->wBoardBox);
-	delwin(this->wScore);
+	delwin(this->wStats);
+	delwin(this->wInstructions);
 	endwin();
 	free(this);
 }
