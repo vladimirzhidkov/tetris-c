@@ -10,12 +10,6 @@
 #define SCORE_LINE_3 SCORE_BASE * 5
 #define SCORE_LINE_4 SCORE_BASE * 8
 
-/* tetromino */
-#define TETROMINO_SIZE 4
-#define TETROMINO_LEN TETROMINO_SIZE * TETROMINO_SIZE
-typedef char Tetromino[TETROMINO_SIZE][TETROMINO_SIZE];
-
-
 /* tetromino pool */
 #define TETROPOOL_SIZE 7
 #define I_SHAPE { \
@@ -54,42 +48,46 @@ typedef char Tetromino[TETROMINO_SIZE][TETROMINO_SIZE];
 	{0, 1, 1, 0}, \
 	{0, 0, 0, 0}  }
 
+/* tetromino */
+#define TETROMINO_SIZE 4
+#define TETROMINO_LEN TETROMINO_SIZE * TETROMINO_SIZE
+typedef char Tetromino[TETROMINO_SIZE][TETROMINO_SIZE];
+
 /* board */
 #define BOARD_HEIGHT        15
 #define BOARD_WIDTH         10
 #define BOARD_LEN           BOARD_HEIGHT * BOARD_WIDTH 
 typedef char Board[BOARD_HEIGHT][BOARD_WIDTH];
 
+/* event handlers */
+typedef void (* EventHandler)( void );
+typedef enum {
+	EVENT_STATS_CHANGED,
+	EVENT_BOARD_CHANGED,
+	EVENT_PIECE_CHANGED,
+	EVENT_GAME_OVER
+} EventType;
+
 /* game */
-typedef struct Game
-{
-	Tetromino* nextPiece;
-	Tetromino* piece;
-
-	int pieceX;
-	int pieceY;
-
-	Board staticBoard; // board with tetrominoes fixed in place
-	Board activeBoard; // board with tetrominoes that can move
-
-	int score;
-	int level;
-	int clearedLinesCount;
-
-	/* observers */
-	void (* eventStatsChanged)( void );
-	void (* eventBoardChanged)( void );
-	void (* eventPieceChanged)( void );
-	void (* eventGameOver)( void );
-} Game;
-
+typedef struct Game Game;
 Game* createGame( void );
+
+/* actions */
 void moveLeft( Game* this );
 void moveRight( Game* this );
 void moveDown( Game* this );
 void rotateClockwise( Game* this );
 void rotateCounterClockwise( Game* this );
-char* getBoard( Game* this );
 void destroyGame( Game* this );
+
+/* getters */
+char* getBoard( Game* this );
+char* getNextTetromino( Game* this );
+int getScore( Game* this );
+int getLevel( Game* this );
+int getClearedLinesCount( Game* this );
+
+/* event handlers */
+void registerEventHandler( Game* this, EventType type, EventHandler handler );
 
 #endif // GAME_H

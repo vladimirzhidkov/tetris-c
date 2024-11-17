@@ -13,17 +13,24 @@ View* VIEW;
 
 void onEventStatsChanged( void )
 {
-	renderStats(VIEW, GAME->level, GAME->clearedLinesCount, GAME->score);
+	int level = getLevel(GAME);
+	int clearedLinesCount = getClearedLinesCount(GAME);
+	int score = getScore(GAME);
+
+	renderStats(VIEW, level, clearedLinesCount, score);
 }
 
 void onEventBoardChanged( void )
 {
-	renderBoard(VIEW, getBoard(GAME));
+	char* board = getBoard(GAME);
+
+	renderBoard(VIEW, board);
 }
 
 void onEventPieceChanged( void )
 {
-	renderNextPiece(VIEW, (char *)GAME->nextPiece);
+	char* nextTetromino = getNextTetromino(GAME);
+	renderNextPiece(VIEW, nextTetromino);
 }
 
 void onEventGameOver( void )
@@ -38,9 +45,10 @@ void startGameLoop( void )
 {
 	while (1)
 	{
-		int delay = DELAY_BASE_MS - DELAY_REDUCTION_MS * GAME->level;
+		int level = getLevel(GAME);
+		int delay = DELAY_BASE_MS - DELAY_REDUCTION_MS * level;
+		long long elapsedTime = 0;
 		long long startTime = currentTimeMs();
-		long long elapsedTime = currentTimeMs() - startTime;
 
 		while ( elapsedTime < delay )
 		{
@@ -65,16 +73,20 @@ void startGameLoop( void )
 int main()
 {
 	GAME = createGame();
-	GAME->eventStatsChanged = onEventStatsChanged;
-	GAME->eventBoardChanged = onEventBoardChanged;
-	GAME->eventPieceChanged = onEventPieceChanged;
-	GAME->eventGameOver = onEventGameOver;
+	registerEventHandler(GAME, EVENT_STATS_CHANGED, onEventStatsChanged);
+	registerEventHandler(GAME, EVENT_BOARD_CHANGED, onEventBoardChanged);
+	registerEventHandler(GAME, EVENT_PIECE_CHANGED, onEventPieceChanged);
+	registerEventHandler(GAME, EVENT_GAME_OVER, onEventGameOver);
 
 	VIEW = createView();
-	renderNextPiece(VIEW, (char *)GAME->nextPiece);
-	renderInstructions(VIEW, "Press 'q' to quit");
+	renderNextPiece(VIEW, getNextTetromino(GAME));
+	renderInstructions(VIEW, "q - quit");
 	renderBoard(VIEW, getBoard(GAME));
-	renderStats(VIEW, GAME->level, GAME->clearedLinesCount, GAME->score);
+	int level = getLevel(GAME);
+	int clearedLinesCount = getClearedLinesCount(GAME);
+	int score = getScore(GAME);
+	renderStats(VIEW, level, clearedLinesCount, score);
+
 	startGameLoop();
 	return 0;
 }
