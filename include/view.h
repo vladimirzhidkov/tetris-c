@@ -2,7 +2,8 @@
 #define VIEW_H
 
 #include <ncurses.h>
-#include "model.h"
+#include "board.h"
+#include "tetromino.h"
 
 #define CELL_HEIGHT   2
 #define CELL_WIDTH    4

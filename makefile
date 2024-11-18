@@ -1,5 +1,5 @@
 SRC_DIR = src
-INCLUDE_DIR = include
+INCLUDE_DIR = include include/game
 BUILD_DIR = build
 PROJECT = $(BUILD_DIR)/tetris.out
 VERBOSE = 0
@@ -9,11 +9,12 @@ CPP = $(CC)
 AS = $(CC)
 LD = $(CC)
 
-CPPFLAGS = -MD -I$(INCLUDE_DIR)
+CPPFLAGS = -MD $(INCLUDE_DIR:%=-I%)
 CFLAGS = -g -O0 -c -std=c99 -Wall #-save-temps=obj
 LDFLAGS = -lncurses #-v
 
-CFILES = main.c model.c stats.c view.c shared.c
+CFILES_GAME = game.c board.c tetromino.c tetropool.c stats.c events.c
+CFILES = main.c view.c $(CFILES_GAME:%.c=game/%.c) 
 SFILES =
 IFILES = $(CFILES:%.c=$(BUILD_DIR)/%.i)
 OFILES = $(CFILES:%.c=$(BUILD_DIR)/%.o)

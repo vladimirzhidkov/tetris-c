@@ -2,14 +2,39 @@
 #include <string.h>
 #include <ncurses.h>
 #include "view.h"
-#include "model.h"
-#include "shared.h"
 
 #define scaleBoardUp(src, dst) \
-	scaleUp( src, dst, BOARD_HEIGHT, BOARD_WIDTH, CELL_HEIGHT, CELL_WIDTH )
+	scale_up( src, dst, BOARD_HEIGHT, BOARD_WIDTH, CELL_HEIGHT, CELL_WIDTH )
 
 #define scalePieceUp(src, dst) \
-	scaleUp( src, dst, TETROMINO_SIZE, TETROMINO_SIZE, CELL_HEIGHT, CELL_WIDTH )
+	scale_up( src, dst, TETROMINO_SIZE, TETROMINO_SIZE, CELL_HEIGHT, CELL_WIDTH )
+
+
+
+void scale_up( char* src, char* dst, int src_height, int src_width, int height_scale, int width_scale )
+{
+	int dst_width = src_width * width_scale;
+	char (*s)[src_width] = (char (*)[src_width])src;
+	char (*d)[dst_width] = (char (*)[dst_width])dst;
+
+	for (int src_row = 0; src_row < src_height; src_row++)
+	{
+		for (int src_col = 0; src_col < src_width; src_col++) 
+		{
+			for (int cell_row = 0; cell_row < height_scale; cell_row++)
+			{
+				for (int cell_col = 0; cell_col < width_scale; cell_col++)
+				{
+					int dst_row = src_row * height_scale + cell_row;
+					int dst_col = src_col * width_scale + cell_col;
+
+					d[dst_row][dst_col] = s[src_row][src_col];
+				}
+			}
+		}
+	}
+}
+
 
 View* createView( void )
 {

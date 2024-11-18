@@ -6,5 +6,9 @@
         "stats.h": "c"
     },
     "editor.fontSize": 14,
-    "files.autoSave": "afterDelay"
+    "files.autoSave": "afterDelay",
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/**",
+        "${workspaceFolder}/include"
+    ]
 }
