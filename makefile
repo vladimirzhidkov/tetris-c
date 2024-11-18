@@ -13,7 +13,7 @@ CPPFLAGS = -MD -I$(INCLUDE_DIR)
 CFLAGS = -g -O0 -c -std=c99 -Wall #-save-temps=obj
 LDFLAGS = -lncurses #-v
 
-CFILES = main.c model.c view.c shared.c
+CFILES = main.c model.c stats.c view.c shared.c
 SFILES =
 IFILES = $(CFILES:%.c=$(BUILD_DIR)/%.i)
 OFILES = $(CFILES:%.c=$(BUILD_DIR)/%.o)

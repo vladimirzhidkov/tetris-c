@@ -2,7 +2,8 @@
     "makefile.configureOnOpen": true,
     "files.associations": {
         "shared.h": "c",
-        "model.h": "c"
+        "model.h": "c",
+        "stats.h": "c"
     },
     "editor.fontSize": 14,
     "files.autoSave": "afterDelay"

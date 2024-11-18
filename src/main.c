@@ -13,9 +13,9 @@ View* VIEW;
 
 void onEventStatsChanged( void )
 {
-	int level = getLevel(GAME);
-	int clearedLinesCount = getClearedLinesCount(GAME);
-	int score = getScore(GAME);
+	int level = getGameLevel( GAME );
+	int clearedLinesCount = getGameClearedLinesCount( GAME );
+	int score = getGameScore( GAME );
 
 	renderStats(VIEW, level, clearedLinesCount, score);
 }
@@ -45,7 +45,7 @@ void startGameLoop( void )
 {
 	while (1)
 	{
-		int level = getLevel(GAME);
+		int level = getGameLevel( GAME );
 		int delay = DELAY_BASE_MS - DELAY_REDUCTION_MS * level;
 		long long elapsedTime = 0;
 		long long startTime = currentTimeMs();
@@ -82,9 +82,9 @@ int main()
 	renderNextPiece(VIEW, getNextTetromino(GAME));
 	renderInstructions(VIEW, "q - quit");
 	renderBoard(VIEW, getBoard(GAME));
-	int level = getLevel(GAME);
-	int clearedLinesCount = getClearedLinesCount(GAME);
-	int score = getScore(GAME);
+	int level = getGameLevel( GAME );
+	int clearedLinesCount = getGameClearedLinesCount( GAME );
+	int score = getGameScore( GAME );
 	renderStats(VIEW, level, clearedLinesCount, score);
 
 	startGameLoop();

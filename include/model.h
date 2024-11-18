@@ -1,15 +1,6 @@
 #ifndef GAME_H 
 #define GAME_H
 
-#define LINES_PER_LEVEL 10
-
-/* scoring rules */
-#define SCORE_BASE 10 
-#define SCORE_LINE_1 SCORE_BASE * 1
-#define SCORE_LINE_2 SCORE_BASE * 3
-#define SCORE_LINE_3 SCORE_BASE * 5
-#define SCORE_LINE_4 SCORE_BASE * 8
-
 /* tetromino pool */
 #define TETROPOOL_SIZE 7
 #define I_SHAPE { \
@@ -83,11 +74,13 @@ void destroyGame( Game* this );
 /* getters */
 char* getBoard( Game* this );
 char* getNextTetromino( Game* this );
-int getScore( Game* this );
-int getLevel( Game* this );
-int getClearedLinesCount( Game* this );
 
 /* event handlers */
 void registerEventHandler( Game* this, EventType type, EventHandler handler );
+
+/* stats */
+int getGameScore( Game* this );
+int getGameLevel( Game* this );
+int getGameClearedLinesCount( Game* this );
 
 #endif // GAME_H

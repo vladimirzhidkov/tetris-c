@@ -5,6 +5,10 @@
 #include <time.h>
 #include "shared.h"
 #include "model.h"
+#include "stats.h"
+
+static Tetromino TETROPOOL[TETROPOOL_SIZE] =
+	{ I_SHAPE, T_SHAPE, S_SHAPE, Z_SHAPE, O_SHAPE, L_SHAPE, J_SHAPE };
 
 struct Game
 {
@@ -16,9 +20,7 @@ struct Game
 	Board staticBoard; // board with tetrominoes fixed in place
 	Board activeBoard; // board with tetromino that can move
 
-	int score;
-	int level;
-	int clearedLinesCount;
+	Stats* stats;
 
 	/* event handlers */
 	EventHandler eventStatsChanged;
@@ -26,18 +28,6 @@ struct Game
 	EventHandler eventPieceChanged;
 	EventHandler eventGameOver;
 };
-
-
-static const int LINE_SCORE[] =
-	{ 0, SCORE_LINE_1, SCORE_LINE_2, SCORE_LINE_3, SCORE_LINE_4 };
-
-static Tetromino TETROPOOL[TETROPOOL_SIZE] =
-	{ I_SHAPE, T_SHAPE, S_SHAPE, Z_SHAPE, O_SHAPE, L_SHAPE, J_SHAPE };
-
-static inline int calcScore(int lines, int level)
-{
-	return LINE_SCORE[lines] * level;
-}
 
 static inline Tetromino* getTetromino( Game* this )
 {
@@ -151,15 +141,13 @@ static void spawnTetromino( Game* this )
 	}
 }
 
-static void incrementClearedLinesCount( Game* this, int increment )
+static void incrementClearedLinesCount( Game* this, int lines )
 {
-	if (increment <= 0 || this->eventStatsChanged == NULL)
+	if (lines <= 0 || this->eventStatsChanged == NULL)
 	{
 		return;
 	}
-	this->clearedLinesCount += increment;
-	this->score += calcScore(increment, this->level);
-	this->level = (this->clearedLinesCount / LINES_PER_LEVEL) + 1;
+	updateClearedLinesCount(this->stats, lines);
 	this->eventStatsChanged();
 }	
 
@@ -170,6 +158,7 @@ static void incrementClearedLinesCount( Game* this, int increment )
 Game* createGame( void )
 {
 	Game* this = malloc( sizeof(Game) );
+	this->stats = createStats();
 
 	/* random seed */
 	srand(time(NULL));
@@ -184,17 +173,16 @@ Game* createGame( void )
 	memset( this->staticBoard, 0, BOARD_LEN );
 	memset( this->activeBoard, 0, BOARD_LEN );
 
-	/* game stats */
-	this->score = 0;
-	this->level = 1;
-	this->clearedLinesCount = 0;
-
 	return this;
 }
 
 void moveLeft( Game* this )
 {
-	if ( !detectCollision( & this->staticBoard, getTetromino(this), this->pieceX - 1, this->pieceY) )
+	Board* pboard = & this->staticBoard;
+	Tetromino* ptetromino = getTetromino(this);
+	bool isCollided = detectCollision( pboard, ptetromino, this->pieceX - 1, this->pieceY);
+
+	if ( !isCollided )
 	{
 		this->pieceX--;
 		this->eventBoardChanged();
@@ -203,7 +191,11 @@ void moveLeft( Game* this )
 
 void moveRight(Game* this)
 {
-	if ( !detectCollision( & this->staticBoard, getTetromino(this), this->pieceX + 1, this->pieceY) )
+	Board* pboard = & this->staticBoard;
+	Tetromino* ptetromino = getTetromino(this);
+	bool isCollided = detectCollision( pboard, ptetromino, this->pieceX + 1, this->pieceY);
+
+	if ( !isCollided )
 	{
 		this->pieceX++;
 		this->eventBoardChanged();
@@ -212,18 +204,21 @@ void moveRight(Game* this)
 
 void moveDown( Game* this )
 {
-	Tetromino* tetromino = getTetromino(this);
-	if ( !detectCollision( & this->staticBoard, tetromino, this->pieceX, this->pieceY + 1) )
+	Board* pboard = & this->staticBoard;
+	Tetromino* ptetromino = getTetromino(this);
+	bool isCollided = detectCollision( pboard, ptetromino, this->pieceX, this->pieceY + 1);
+
+	if ( isCollided )
 	{
-		this->pieceY++;
-		this->eventBoardChanged();
+		fixTetrominoToBoard(pboard, ptetromino, this->pieceX, this->pieceY);
+		int clearedLinesCount = clearFullRows(pboard);
+		incrementClearedLinesCount(this, clearedLinesCount);
+		spawnTetromino(this);
 	}
 	else
 	{
-		fixTetrominoToBoard(& this->staticBoard, tetromino, this->pieceX, this->pieceY);
-		int clearedLinesCount = clearFullRows(& this->staticBoard);
-		incrementClearedLinesCount(this, clearedLinesCount);
-		spawnTetromino(this);
+		this->pieceY++;
+		this->eventBoardChanged();
 	}
 }
 
@@ -263,12 +258,9 @@ void rotateCounterClockwise( Game* this )
 
 void destroyGame( Game* this )
 {
+	destroyStats( this->stats );
 	free(this);
 }
-
-/*
- ******************** GETTERS ******************** 
- */
 
 char* getBoard( Game* this )
 {
@@ -282,25 +274,6 @@ char* getNextTetromino( Game* this )
 {
 	return (char *)& TETROPOOL[this->nextPieceIndex];
 }
-
-int getScore( Game* this )
-{
-	return this->score;
-}
-
-int getLevel( Game* this )
-{
-	return this->level;
-}
-
-int getClearedLinesCount( Game* this )
-{
-	return this->clearedLinesCount;
-}
-
-/*
- ******************** EVENT HANDLERS ******************** 
- */
 
 void registerEventHandler( Game* this, EventType type, EventHandler handler )
 {
@@ -323,4 +296,21 @@ void registerEventHandler( Game* this, EventType type, EventHandler handler )
 
 
 
+/*
+ ******************** STATS ******************** 
+ */
 
+int getGameScore( Game* this )
+{
+	return getScore( this->stats );
+}
+
+int getGameLevel( Game* this )
+{
+	return getLevel( this->stats );
+}
+
+int getGameClearedLinesCount( Game* this )
+{
+	return getClearedLinesCount( this->stats );
+}
