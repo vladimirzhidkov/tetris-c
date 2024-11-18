@@ -37,7 +37,7 @@ void onEventBoardChanged( void )
 
 void onEventPieceChanged( void )
 {
-	char* nextTetromino = game_get_next_piece(GAME);
+	char* nextTetromino = game_get_next_shape(GAME);
 	renderNextPiece(VIEW, nextTetromino);
 }
 
@@ -87,7 +87,7 @@ int main()
 	game_register_event_handler(GAME, EVENT_GAME_OVER, onEventGameOver);
 
 	VIEW = createView();
-	renderNextPiece(VIEW, game_get_next_piece(GAME));
+	renderNextPiece(VIEW, game_get_next_shape(GAME));
 	renderInstructions(VIEW, "q - quit");
 	renderBoard(VIEW, game_get_board(GAME));
 	int level = game_get_level( GAME );

@@ -41,6 +41,6 @@
 	{0, 1, 1, 0}, \
 	{0, 0, 0, 0}  }
 
-tetromino_t* tetropool_get_piece( int index );
+tetromino_shape_t* tetropool_get_shape( int index );
 
 #endif /* TETROPOOL_H */

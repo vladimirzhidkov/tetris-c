@@ -3,7 +3,8 @@
     "files.associations": {
         "shared.h": "c",
         "model.h": "c",
-        "stats.h": "c"
+        "stats.h": "c",
+        "tetromino.h": "c"
     },
     "editor.fontSize": 14,
     "files.autoSave": "afterDelay",
