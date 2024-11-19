@@ -13,75 +13,15 @@
 struct game_t
 {
 	tetromino_t *tetromino;
-	board_t *static_board; // board with tetrominoes fixed in place
-	board_t *active_board; // board with tetromino that can move
+	board_t *board;
 	stats_t *stats;
 	events_t *events;
 };
 
-/* Fixes the tetromino to the board by setting occupied cells to 1.
- * The tetromino's position (x,y) determines where it is placed on the board.
- */
-static void fix_piece_to_board( board_t *p_board, tetromino_t *p_piece )
-{
-	tetromino_shape_t* piece = tetromino_get_active_shape( p_piece );
-	int piece_x = tetromino_get_x( p_piece );
-	int piece_y = tetromino_get_y( p_piece );
-
-	for (int cell_y = 0; cell_y < TETROMINO_SIZE; ++cell_y)
-	{
-		for (int cell_x = 0; cell_x < TETROMINO_SIZE; ++cell_x)
-		{
-			if ( (*piece)[cell_y][cell_x] )
-			{
-				(*p_board)[piece_y + cell_y][piece_x + cell_x] = 1;
-			}
-		}
-	}
-}
-
-static bool detect_collision( board_t *p_board, tetromino_t *p_piece )
-{
-	tetromino_shape_t* piece = tetromino_get_active_shape( p_piece );
-	int piece_x = tetromino_get_x( p_piece );
-	int piece_y = tetromino_get_y( p_piece );
-
-	for (int cell_y = 0; cell_y < TETROMINO_SIZE; ++cell_y)
-	{
-		for (int cell_x = 0; cell_x < TETROMINO_SIZE; ++cell_x)
-		{
-			if ( (*piece)[cell_y][cell_x] )
-			{
-				int board_x = piece_x + cell_x;
-				int board_y = piece_y + cell_y;
-
-				bool is_outside = board_x < 0 || board_x >= BOARD_WIDTH || board_y >= BOARD_HEIGHT;
-				bool is_collided = (*p_board)[board_y][board_x];
-
-				if (is_outside || is_collided)
-				{
-					return true;
-				}
-			}
-		}
-	}
-	return false;
-}
-
-static void increment_cleared_lines_count( game_t* this, int lines )
-{
-	if (lines <= 0)
-	{
-		return;
-	}
-	stats_update_cleared_lines_count(this->stats, lines);
-	events_trigger( this->events, EVENT_STATS_CHANGED );
-}	
-
 static void spawn_piece( game_t* this )
 {
 	tetromino_spawn( this->tetromino, (BOARD_WIDTH - TETROMINO_SIZE) / 2, 0);
-	bool is_collided = detect_collision( this->static_board, this->tetromino );
+	bool is_collided = board_detect_collision( this->board, this->tetromino );
 
 	if ( is_collided )
 	{
@@ -100,8 +40,7 @@ game_t* game_create( void )
 {
 	game_t* this = malloc( sizeof(game_t) );
 	this->tetromino = tetromino_create((BOARD_WIDTH - TETROMINO_SIZE) / 2, 0);
-	this->active_board = board_create();
-	this->static_board = board_create();
+	this->board = board_create();
 	this->stats = stats_create();
 	this->events = events_create();
 	return this;
@@ -112,8 +51,7 @@ void game_destroy( game_t* this )
 	tetromino_destroy( this->tetromino );
 	stats_destroy( this->stats );
 	events_destroy( this->events );
-	board_destroy( this->active_board );
-	board_destroy( this->static_board );
+	board_destroy( this->board );
 	free(this);
 }
 
@@ -124,7 +62,7 @@ void game_destroy( game_t* this )
 void game_move_piece_left( game_t* this )
 {
 	tetromino_move_left( this->tetromino );
-	bool is_collided = detect_collision( this->static_board, this->tetromino );
+	bool is_collided = board_detect_collision( this->board, this->tetromino );
 
 	if ( is_collided )
 	{
@@ -139,7 +77,7 @@ void game_move_piece_left( game_t* this )
 void game_move_piece_right(game_t* this)
 {
 	tetromino_move_right( this->tetromino );
-	bool is_collided = detect_collision( this->static_board, this->tetromino );
+	bool is_collided = board_detect_collision( this->board, this->tetromino );
 
 	if ( is_collided )
 	{
@@ -154,14 +92,15 @@ void game_move_piece_right(game_t* this)
 void game_move_piece_down( game_t* this )
 {
 	tetromino_move_down( this->tetromino );
-	bool is_collided = detect_collision( this->static_board, this->tetromino );
+	bool is_collided = board_detect_collision( this->board, this->tetromino );
 
 	if ( is_collided )
 	{
 		tetromino_move_up( this->tetromino );
-		fix_piece_to_board(this->static_board, this->tetromino);
-		int clearedLinesCount = board_clear_full_rows(this->static_board);
-		increment_cleared_lines_count(this, clearedLinesCount);
+		board_fix_tetromino_to_board(this->board, this->tetromino);
+		int clearedLinesCount = board_clear_full_rows(this->board);
+		stats_update_cleared_lines_count(this->stats, clearedLinesCount);
+		events_trigger( this->events, EVENT_STATS_CHANGED );
 		spawn_piece(this);
 	}
 	events_trigger( this->events, EVENT_BOARD_CHANGED );
@@ -170,7 +109,7 @@ void game_move_piece_down( game_t* this )
 void game_rotate_piece_cw( game_t* this )
 {
 	tetromino_rotate_cw( this->tetromino );
-	bool is_collided = detect_collision( this->static_board, this->tetromino );
+	bool is_collided = board_detect_collision( this->board, this->tetromino );
 
 	if ( is_collided )
 	{
@@ -185,7 +124,7 @@ void game_rotate_piece_cw( game_t* this )
 void game_rotate_piece_ccw( game_t* this )
 {
 	tetromino_rotate_ccw( this->tetromino );
-	bool is_collided = detect_collision( this->static_board, this->tetromino );
+	bool is_collided = board_detect_collision( this->board, this->tetromino );
 
 	if ( is_collided )
 	{
@@ -199,9 +138,8 @@ void game_rotate_piece_ccw( game_t* this )
 
 char* game_get_board( game_t* this )
 {
-	memcpy(this->active_board, this->static_board, BOARD_LEN);
-	fix_piece_to_board(this->active_board, this->tetromino);
-	return (char *)this->active_board;
+	char* body = board_get_body(this->board, this->tetromino);
+	return body;
 }
 
 char* game_get_next_shape( game_t* this )

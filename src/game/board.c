@@ -4,6 +4,34 @@
 
 #include "board.h"
 
+struct board_t
+{
+	board_body_t active_board; // board without active tetromino
+	board_body_t static_board; // board with active tetromino placed on board 
+};
+
+/* Fixes the tetromino to the board by setting occupied cells to 1.
+ * The tetromino's position (x,y) determines where it is placed on the board.
+ */
+static void place_tetromino( board_body_t board, tetromino_t *p_piece )
+{
+	tetromino_shape_t* piece = tetromino_get_active_shape( p_piece );
+	int piece_x = tetromino_get_x( p_piece );
+	int piece_y = tetromino_get_y( p_piece );
+
+	for (int cell_y = 0; cell_y < TETROMINO_SIZE; ++cell_y)
+	{
+		for (int cell_x = 0; cell_x < TETROMINO_SIZE; ++cell_x)
+		{
+			if ( (*piece)[cell_y][cell_x] )
+			{
+				board[piece_y + cell_y][piece_x + cell_x] = 1;
+			}
+		}
+	}
+}
+
+
 board_t* board_create( void )
 {
 	board_t* this = (board_t *)malloc(sizeof(board_t));
@@ -23,7 +51,6 @@ void board_destroy( board_t *this )
 int board_clear_full_rows( board_t *this )
 {
 	int cleared_rows_count = 0;
-	char (*board)[BOARD_WIDTH] = *this;
 
 	/* Start from the bottom of the board and move up */
 	for (int src_row = BOARD_HEIGHT - 1, dst_row = src_row; src_row >= 0; --src_row)
@@ -32,27 +59,67 @@ int board_clear_full_rows( board_t *this )
 		bool is_full_row = true;
 		for (int col = 0; col < BOARD_WIDTH; ++col)
 		{
-			if ( board[src_row][col] == 0 )
+			if ( this->active_board[src_row][col] == 0 )
 			{
 				is_full_row = false;
 				break;
 			}
 		}
+
 		if (is_full_row)
 		{
 			++cleared_rows_count;
+			continue;
 		}
-		else
+
+		if (dst_row != src_row)
 		{
-			if (dst_row != src_row)
-			{
-				memcpy( board[dst_row], board[src_row], BOARD_WIDTH);
-			}
-			--dst_row;
+			memcpy( this->active_board[dst_row], this->active_board[src_row], BOARD_WIDTH);
 		}
+		--dst_row;
 	}
 	/* add empty rows at the top */
-	memset( board[0], 0, BOARD_WIDTH * cleared_rows_count);
+	memset( this->active_board[0], 0, BOARD_WIDTH * cleared_rows_count);
 
 	return cleared_rows_count;
+}
+
+void board_fix_tetromino_to_board( board_t *this, tetromino_t *p_piece )
+{
+	place_tetromino( this->active_board, p_piece );
+}
+
+bool board_detect_collision( board_t *this, tetromino_t *p_piece )
+{
+	tetromino_shape_t* piece = tetromino_get_active_shape( p_piece );
+	int piece_x = tetromino_get_x( p_piece );
+	int piece_y = tetromino_get_y( p_piece );
+
+	for (int cell_y = 0; cell_y < TETROMINO_SIZE; ++cell_y)
+	{
+		for (int cell_x = 0; cell_x < TETROMINO_SIZE; ++cell_x)
+		{
+			if ( (*piece)[cell_y][cell_x] )
+			{
+				int board_x = piece_x + cell_x;
+				int board_y = piece_y + cell_y;
+
+				bool is_outside = board_x < 0 || board_x >= BOARD_WIDTH || board_y >= BOARD_HEIGHT;
+				bool is_collided = this->active_board[board_y][board_x];
+
+				if (is_outside || is_collided)
+				{
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
+char* board_get_body( board_t *this, tetromino_t *p_piece )
+{
+	memcpy(this->static_board, this->active_board, BOARD_LEN);
+	place_tetromino( this->static_board, p_piece );
+	return (char *) this->static_board;
 }
