@@ -1,4 +1,3 @@
-#include <time.h>
 #include <stdlib.h>
 #include "tetromino.h"
 #include "tetropool.h"
@@ -55,7 +54,6 @@ static void reverse_cols( tetromino_shape_t *shape)
 
 tetromino_t* tetromino_create( int x, int y )
 {
-	srand(time(NULL));
 	tetromino_t* this = (tetromino_t*)malloc( sizeof( tetromino_t ) );
 	this->tetropool = tetropool_create();
 	this->active_shape = tetropool_get_random_shape( this->tetropool );
@@ -110,8 +108,8 @@ void tetromino_rotate_cw( tetromino_t *tetromino)
 
 void tetromino_rotate_ccw( tetromino_t *tetromino)
 {
+	transpose( tetromino->active_shape );
 	reverse_cols( tetromino->active_shape );
-	reverse_rows( tetromino->active_shape );
 }
 
 

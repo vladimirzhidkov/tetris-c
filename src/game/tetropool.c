@@ -1,3 +1,4 @@
+#include <time.h>
 #include <stdlib.h>
 #include <string.h>
 #include "tetropool.h"
@@ -11,9 +12,18 @@ struct tetropool_t
 
 tetropool_t* tetropool_create( void )
 {
-	tetropool_t* this = (tetropool_t*)malloc( sizeof( tetropool_t ) );
-	tetromino_shape_t pool[TETROPOOL_SIZE] = {
-		 I_SHAPE, T_SHAPE, S_SHAPE, Z_SHAPE, O_SHAPE, L_SHAPE, J_SHAPE };
+	srand(time(NULL));
+	tetropool_t *this = (tetropool_t *)malloc( sizeof( tetropool_t ) );
+	tetromino_shape_t pool[TETROPOOL_SIZE] =
+	{
+		 I_SHAPE,
+		 T_SHAPE,
+		 S_SHAPE,
+		 Z_SHAPE,
+		 O_SHAPE,
+		 L_SHAPE,
+		 J_SHAPE
+	};
 	memcpy(this->pool, pool, sizeof(tetromino_shape_t) * TETROPOOL_SIZE);
 	this->size = TETROPOOL_SIZE;
 	return this;
