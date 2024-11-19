@@ -5,10 +5,12 @@
 
 struct tetromino_t
 {
+	tetropool_t *tetropool;
 	tetromino_shape_t *active_shape;
 	tetromino_shape_t *next_shape;
 	int x;
 	int y;
+	int size;
 };
 
 static void transpose( tetromino_shape_t *shape)
@@ -50,36 +52,34 @@ static void reverse_cols( tetromino_shape_t *shape)
 	}
 }
 
-/*
- ******************** PUBLIC METHODS ******************** 
- */
 
 tetromino_t* tetromino_create( int x, int y )
 {
 	srand(time(NULL));
 	tetromino_t* this = (tetromino_t*)malloc( sizeof( tetromino_t ) );
-	this->active_shape = tetropool_get_shape( rand() % TETROPOOL_SIZE );
-	this->next_shape = tetropool_get_shape( rand() % TETROPOOL_SIZE );
+	this->tetropool = tetropool_create();
+	this->active_shape = tetropool_get_random_shape( this->tetropool );
+	this->next_shape = tetropool_get_random_shape( this->tetropool );
 	this->x = x;
 	this->y = y;
+	this->size = TETROMINO_SIZE;
 	return this;
 }
 
 void tetromino_destroy( tetromino_t *this )
 {
+	tetropool_destroy( this->tetropool );
 	free( this );
 }
 
-/*
- ******************** ACTIONS ******************** 
- */
+
 
 void tetromino_spawn( tetromino_t *this, int x, int y )
 {
 	this->active_shape = this->next_shape;
 	this->x = x;
 	this->y = y;
-	this->next_shape = tetropool_get_shape( rand() % TETROPOOL_SIZE );
+	this->next_shape = tetropool_get_random_shape( this->tetropool );
 }
 
 void tetromino_move_down( tetromino_t *this )

@@ -1,6 +1,5 @@
 #ifndef TETROPOOL_H
 #define TETROPOOL_H
-
 #include "tetromino.h"
 
 /* tetromino pool */
@@ -41,6 +40,12 @@
 	{0, 1, 1, 0}, \
 	{0, 0, 0, 0}  }
 
-tetromino_shape_t* tetropool_get_shape( int index );
+typedef struct tetropool_t tetropool_t;
+
+tetropool_t* tetropool_create( void );
+void tetropool_destroy( tetropool_t * );
+
+/* Actions */
+tetromino_shape_t* tetropool_get_random_shape( tetropool_t * );
 
 #endif /* TETROPOOL_H */

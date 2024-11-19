@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include "events.h"
 
 struct events_t
@@ -12,13 +13,15 @@ struct events_t
 events_t* events_create( void )
 {
 	events_t* this = (events_t *)malloc(sizeof(events_t));
-	this->on_stats_changed = NULL;
-	this->on_board_changed = NULL;
-	this->on_piece_changed = NULL;
-	this->on_game_over = NULL;
-
+	memset(this, 0, sizeof(events_t));
 	return this;
 }
+
+void events_destroy( events_t *this )
+{
+	free(this);
+}
+
 
 void events_register( events_t *this, event_t type, event_handler_fn handler )
 {
@@ -58,7 +61,3 @@ void events_trigger( events_t *this, event_t type )
 	}
 }
 
-void events_destroy( events_t *this )
-{
-	free(this);
-}

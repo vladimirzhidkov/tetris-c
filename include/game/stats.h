@@ -11,10 +11,14 @@
 typedef struct stats_t stats_t;
 
 stats_t* stats_create( void );
+void stats_destroy( stats_t * );
+
+/* Actions */
+void stats_update( stats_t *, int lines );    
+
+/* Getters */
 int stats_get_score( stats_t * );
 int stats_get_level( stats_t * );
-int stats_get_cleared_lines_count( stats_t * );
-void stats_update_cleared_lines_count( stats_t *, int lines );    
-void stats_destroy( stats_t * );
+int stats_get_lines_cleared( stats_t * );
 
 #endif // STATS_H

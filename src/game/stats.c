@@ -5,7 +5,7 @@ struct stats_t
 {
 	int score;
 	int level;
-	int clearedLinesCount;
+	int lines_cleared;
 };
 
 static const int LINES_SCORE_MULTIPLIERS[] =
@@ -22,9 +22,16 @@ stats_t* stats_create( void )
 	stats_t* this = (stats_t*)malloc( sizeof( stats_t ) );
 	this->score = 0;
 	this->level = 1;
-	this->clearedLinesCount = 0;
+	this->lines_cleared = 0;
 	return this;
 }
+
+void stats_destroy( stats_t* this )
+{
+	free( this );
+}
+
+
 
 int stats_get_score( stats_t* this )
 {
@@ -36,19 +43,15 @@ int stats_get_level( stats_t* this )
 	return this->level;
 }
 
-int stats_get_cleared_lines_count( stats_t* this )
+int stats_get_lines_cleared( stats_t* this )
 {
-	return this->clearedLinesCount;
+	return this->lines_cleared;
 }
 
-void stats_update_cleared_lines_count( stats_t* this, int lines )
+void stats_update( stats_t* this, int lines )
 {
-	this->clearedLinesCount += lines;
+	this->lines_cleared += lines;
 	this->score += LINES_SCORE_MULTIPLIERS[lines] * this->level;
-    this->level = this->clearedLinesCount / STATS_LINES_PER_LEVEL + 1;
+    this->level = this->lines_cleared / STATS_LINES_PER_LEVEL + 1;
 }
 
-void stats_destroy( stats_t* this )
-{
-	free( this );
-}

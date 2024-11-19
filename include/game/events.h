@@ -9,13 +9,14 @@ typedef enum
 	EVENT_PIECE_CHANGED,
 	EVENT_GAME_OVER
 } event_t;
-
 typedef struct events_t events_t;
 
 events_t* events_create( void );
-void events_register( events_t *, event_t type, event_handler_fn handler );
-void events_trigger( events_t *, event_t type );
 void events_destroy( events_t * );
+
+/* Actions */
+void events_register( events_t *, event_t , event_handler_fn );
+void events_trigger( events_t *, event_t );
 
 #endif /* EVENTS_H */
 

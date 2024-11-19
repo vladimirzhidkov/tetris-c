@@ -22,10 +22,10 @@ long long current_time_ms( void )
 void onEventStatsChanged( void )
 {
 	int level = game_get_level( GAME );
-	int clearedLinesCount = game_get_cleared_lines_count( GAME );
+	int lines_cleared = game_get_cleared_lines_count( GAME );
 	int score = game_get_score( GAME );
 
-	renderStats(VIEW, level, clearedLinesCount, score);
+	renderStats(VIEW, level, lines_cleared, score);
 }
 
 void onEventBoardChanged( void )
@@ -91,9 +91,9 @@ int main()
 	renderInstructions(VIEW, "q - quit");
 	renderBoard(VIEW, game_get_board(GAME));
 	int level = game_get_level( GAME );
-	int clearedLinesCount = game_get_cleared_lines_count( GAME );
+	int lines_cleared = game_get_cleared_lines_count( GAME );
 	int score = game_get_score( GAME );
-	renderStats(VIEW, level, clearedLinesCount, score);
+	renderStats(VIEW, level, lines_cleared, score);
 
 	startGameLoop();
 	return 0;

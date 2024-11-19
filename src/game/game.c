@@ -98,8 +98,8 @@ void game_move_piece_down( game_t* this )
 	{
 		tetromino_move_up( this->tetromino );
 		board_fix_tetromino_to_board(this->board, this->tetromino);
-		int clearedLinesCount = board_clear_full_rows(this->board);
-		stats_update_cleared_lines_count(this->stats, clearedLinesCount);
+		int lines_cleared = board_clear_full_rows(this->board);
+		stats_update(this->stats, lines_cleared);
 		events_trigger( this->events, EVENT_STATS_CHANGED );
 		spawn_piece(this);
 	}
@@ -138,7 +138,7 @@ void game_rotate_piece_ccw( game_t* this )
 
 char* game_get_board( game_t* this )
 {
-	char* body = board_get_body(this->board, this->tetromino);
+	char* body = board_generate_snapshot(this->board, this->tetromino);
 	return body;
 }
 
@@ -171,5 +171,5 @@ int game_get_level( game_t* this )
 
 int game_get_cleared_lines_count( game_t* this )
 {
-	return stats_get_cleared_lines_count( this->stats );
+	return stats_get_lines_cleared( this->stats );
 }
