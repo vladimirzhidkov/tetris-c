@@ -52,21 +52,24 @@ static void reverse_cols( tetromino_shape_t *shape)
 }
 
 
-tetromino_t* tetromino_create( int x, int y )
+tetromino_t* tetromino_new( int x, int y )
 {
 	tetromino_t* this = (tetromino_t*)malloc( sizeof( tetromino_t ) );
-	this->tetropool = tetropool_create();
-	this->active_shape = tetropool_get_random_shape( this->tetropool );
-	this->next_shape = tetropool_get_random_shape( this->tetropool );
-	this->x = x;
-	this->y = y;
-	this->size = TETROMINO_SIZE;
+    tetropool_t* pool = tetropool_new();
+    *this = (tetromino_t) {
+        .tetropool = pool,
+        .active_shape = tetropool_get_random_shape(pool),
+        .next_shape = tetropool_get_random_shape(pool),
+        .x = x,
+        .y = y,
+        .size = TETROMINO_SIZE
+    };
 	return this;
 }
 
-void tetromino_destroy( tetromino_t *this )
+void tetromino_free( tetromino_t *this )
 {
-	tetropool_destroy( this->tetropool );
+	tetropool_free( this->tetropool );
 	free( this );
 }
 

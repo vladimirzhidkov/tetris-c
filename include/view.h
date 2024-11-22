@@ -55,11 +55,12 @@ typedef struct View
 	WINDOW * wInstructions;
 } View;
 
-View* createView( void );
+View* view_new( void );
+void view_free( View* );
+
 void renderNextPiece( View*, char* piece );
 void renderBoard( View*, char* board );
 void renderStats( View*, int level, int lines, int score );
 void renderInstructions( View*, char* frame );
-void destroyView( View* );
 
 #endif // VIEW_H

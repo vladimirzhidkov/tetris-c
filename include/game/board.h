@@ -10,8 +10,8 @@
 typedef struct board_t board_t;
 typedef char board_body_t[BOARD_HEIGHT][BOARD_WIDTH];
 
-board_t * board_create( void );
-void board_destroy( board_t * );
+board_t * board_new( void );
+void board_free( board_t * );
 
 /* Actions */
 int board_clear_full_rows( board_t * );

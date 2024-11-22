@@ -31,14 +31,14 @@ static void merge_tetromino_into_board_body( board_body_t board, tetromino_t *p_
 }
 
 
-board_t* board_create( void )
+board_t* board_new( void )
 {
 	board_t* this = (board_t *)malloc(sizeof(board_t));
 	memset( this, 0, sizeof(board_t) );
 	return this;
 }
 
-void board_destroy( board_t *this )
+void board_free( board_t *this )
 {
 	free(this);
 }

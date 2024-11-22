@@ -43,8 +43,8 @@ void onEventNextPieceChanged( void )
 
 void onEventGameOver( void )
 {
-	game_destroy(GAME);
-	destroyView(VIEW);
+	game_free(GAME);
+	view_free(VIEW);
 	puts("\nGame Over\n");
 	exit(0);
 }
@@ -81,13 +81,13 @@ void startGameLoop( void )
 
 int main()
 {
-	GAME = game_create();
+	GAME = game_new();
 	game_register_event_handler(GAME, EVENT_STATS_CHANGED, onEventStatsChanged);
 	game_register_event_handler(GAME, EVENT_BOARD_CHANGED, onEventBoardChanged);
 	game_register_event_handler(GAME, EVENT_NEXT_PIECE_CHANGED, onEventNextPieceChanged);
 	game_register_event_handler(GAME, EVENT_GAME_OVER, onEventGameOver);
 
-	VIEW = createView();
+	VIEW = view_new();
 	renderNextPiece(VIEW, game_get_next_shape(GAME));
 	renderInstructions(VIEW, "q - quit");
 	renderBoard(VIEW, game_get_board(GAME));

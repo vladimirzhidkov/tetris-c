@@ -11,8 +11,8 @@ typedef enum
 } event_t;
 typedef struct events_t events_t;
 
-events_t* events_create( void );
-void events_destroy( events_t * );
+events_t* events_new( void );
+void events_free( events_t * );
 
 /* Actions */
 void events_register( events_t *, event_t , event_handler_fn );

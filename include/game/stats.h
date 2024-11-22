@@ -10,8 +10,8 @@
 
 typedef struct stats_t stats_t;
 
-stats_t* stats_create( void );
-void stats_destroy( stats_t * );
+stats_t* stats_new( void );
+void stats_free( stats_t * );
 
 /* Actions */
 void stats_update( stats_t *, int lines );    

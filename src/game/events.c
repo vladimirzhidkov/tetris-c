@@ -10,14 +10,19 @@ struct events_t
 	event_handler_fn on_game_over;
 }; 
 
-events_t* events_create( void )
+events_t* events_new( void )
 {
 	events_t* this = (events_t *)malloc(sizeof(events_t));
-	memset(this, 0, sizeof(events_t));
+	*this = (events_t) {
+		.on_stats_changed = NULL,
+		.on_board_changed = NULL,
+		.on_next_piece_changed = NULL,
+		.on_game_over = NULL
+	};
 	return this;
 }
 
-void events_destroy( events_t *this )
+void events_free( events_t *this )
 {
 	free(this);
 }

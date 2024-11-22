@@ -36,22 +36,24 @@ static void spawn_piece( game_t* this )
  ******************** PUBLIC METHODS ******************** 
  */
 
-game_t* game_create( void )
+game_t* game_new( void )
 {
 	game_t* this = malloc( sizeof(game_t) );
-	this->tetromino = tetromino_create((BOARD_WIDTH - TETROMINO_SIZE) / 2, 0);
-	this->board = board_create();
-	this->stats = stats_create();
-	this->events = events_create();
+	*this = (game_t) {
+		.tetromino = tetromino_new((BOARD_WIDTH - TETROMINO_SIZE) / 2, 0),
+		.board = board_new(),
+		.stats = stats_new(),
+		.events = events_new()
+	};
 	return this;
 }
 
-void game_destroy( game_t* this )
+void game_free( game_t* this )
 {
-	tetromino_destroy( this->tetromino );
-	stats_destroy( this->stats );
-	events_destroy( this->events );
-	board_destroy( this->board );
+	tetromino_free( this->tetromino );
+	stats_free( this->stats );
+	events_free( this->events );
+	board_free( this->board );
 	free(this);
 }
 

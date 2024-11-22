@@ -42,8 +42,8 @@
 
 typedef struct tetropool_t tetropool_t;
 
-tetropool_t* tetropool_create( void );
-void tetropool_destroy( tetropool_t * );
+tetropool_t* tetropool_new( void );
+void tetropool_free( tetropool_t * );
 
 /* Actions */
 tetromino_shape_t* tetropool_get_random_shape( tetropool_t * );

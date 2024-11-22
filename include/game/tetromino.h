@@ -7,8 +7,8 @@
 typedef char tetromino_shape_t[TETROMINO_SIZE][TETROMINO_SIZE];
 typedef struct tetromino_t tetromino_t;
 
-tetromino_t* tetromino_create( int x, int y );
-void tetromino_destroy( tetromino_t * );
+tetromino_t* tetromino_new( int x, int y );
+void tetromino_free( tetromino_t * );
 
 /* Actions */
 void tetromino_spawn( tetromino_t *, int x, int y );

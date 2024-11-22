@@ -36,7 +36,7 @@ void scale_up( char* src, char* dst, int src_height, int src_width, int height_s
 }
 
 
-View* createView( void )
+View* view_new( void )
 {
 	View* this = malloc( sizeof(View) );
 
@@ -125,7 +125,7 @@ void renderInstructions(View* this, char* instructions)
 	wrefresh(wInstructions);
 }
 
-void destroyView(View* this)
+void view_free(View* this)
 {
 	delwin(this->wNextPiece);
 	delwin(this->wBoard);

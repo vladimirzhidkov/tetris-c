@@ -17,16 +17,18 @@ static const int LINES_SCORE_MULTIPLIERS[] =
 	STATS_LINE_MULTIPLIER_TETRIS
 };
 
-stats_t* stats_create( void )
+stats_t* stats_new( void )
 {
 	stats_t* this = (stats_t*)malloc( sizeof( stats_t ) );
-	this->score = 0;
-	this->level = 1;
-	this->lines_cleared = 0;
+	*this = (stats_t) {
+		.score = 0,
+		.level = 1,
+		.lines_cleared = 0
+	};
 	return this;
 }
 
-void stats_destroy( stats_t* this )
+void stats_free( stats_t* this )
 {
 	free( this );
 }

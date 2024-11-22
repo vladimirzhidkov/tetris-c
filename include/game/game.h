@@ -5,8 +5,8 @@
 
 typedef struct game_t game_t;
 
-game_t* game_create( void );
-void game_destroy( game_t * );
+game_t* game_new( void );
+void game_free( game_t * );
 
 /* actions */
 void game_move_piece_left( game_t * );
