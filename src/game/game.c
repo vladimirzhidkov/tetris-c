@@ -29,7 +29,7 @@ static void spawn_piece( game_t* this )
 	}
 	else
 	{
-		events_trigger( this->events, EVENT_PIECE_CHANGED );
+		events_trigger( this->events, EVENT_NEXT_PIECE_CHANGED );
 	}
 }	
 /*
@@ -135,6 +135,26 @@ void game_rotate_piece_ccw( game_t* this )
 		events_trigger( this->events, EVENT_BOARD_CHANGED );
 	}
 }
+
+void game_drop_piece( game_t* this )
+{
+	while ( !board_detect_collision( this->board, this->tetromino ) )
+	{
+		tetromino_move_down( this->tetromino );
+		events_trigger( this->events, EVENT_BOARD_CHANGED );
+	}
+	tetromino_move_up( this->tetromino );
+	board_fix_tetromino_to_board(this->board, this->tetromino);
+	int lines_cleared = board_clear_full_rows(this->board);
+	stats_update(this->stats, lines_cleared);
+	events_trigger( this->events, EVENT_STATS_CHANGED );
+	spawn_piece(this);
+	events_trigger( this->events, EVENT_BOARD_CHANGED );
+}
+
+
+
+
 
 char* game_get_board( game_t* this )
 {

@@ -6,7 +6,7 @@ typedef enum
 {
 	EVENT_STATS_CHANGED,
 	EVENT_BOARD_CHANGED,
-	EVENT_PIECE_CHANGED,
+	EVENT_NEXT_PIECE_CHANGED,
 	EVENT_GAME_OVER
 } event_t;
 typedef struct events_t events_t;

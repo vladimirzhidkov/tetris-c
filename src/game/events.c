@@ -6,7 +6,7 @@ struct events_t
  {
 	event_handler_fn on_stats_changed;
 	event_handler_fn on_board_changed;
-	event_handler_fn on_piece_changed;
+	event_handler_fn on_next_piece_changed;
 	event_handler_fn on_game_over;
 }; 
 
@@ -33,8 +33,8 @@ void events_register( events_t *this, event_t type, event_handler_fn handler )
 		case EVENT_BOARD_CHANGED:
 			this->on_board_changed = handler;
 			break;
-		case EVENT_PIECE_CHANGED:
-			this->on_piece_changed = handler;
+		case EVENT_NEXT_PIECE_CHANGED:
+			this->on_next_piece_changed = handler;
 			break;
 		case EVENT_GAME_OVER:
 			this->on_game_over = handler;
@@ -52,8 +52,8 @@ void events_trigger( events_t *this, event_t type )
 		case EVENT_BOARD_CHANGED:
 			this->on_board_changed();
 			break;
-		case EVENT_PIECE_CHANGED:
-			this->on_piece_changed();
+		case EVENT_NEXT_PIECE_CHANGED:
+			this->on_next_piece_changed();
 			break;
 		case EVENT_GAME_OVER:
 			this->on_game_over();

@@ -12,6 +12,7 @@ void game_destroy( game_t * );
 void game_move_piece_left( game_t * );
 void game_move_piece_right( game_t * );
 void game_move_piece_down( game_t * );
+void game_drop_piece( game_t * );
 void game_rotate_piece_cw( game_t * );
 void game_rotate_piece_ccw( game_t * );
 

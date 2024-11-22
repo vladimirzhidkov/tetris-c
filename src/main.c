@@ -35,7 +35,7 @@ void onEventBoardChanged( void )
 	renderBoard(VIEW, board);
 }
 
-void onEventPieceChanged( void )
+void onEventNextPieceChanged( void )
 {
 	char* nextTetromino = game_get_next_shape(GAME);
 	renderNextPiece(VIEW, nextTetromino);
@@ -68,6 +68,7 @@ void startGameLoop( void )
 					case KEY_LEFT: game_move_piece_left(GAME); break;
 					case KEY_RIGHT: game_move_piece_right(GAME); break;
 					case KEY_DOWN: game_move_piece_down(GAME); break;
+					case ' ': game_drop_piece(GAME); break;
 					case KEY_UP: game_rotate_piece_cw(GAME); break;
 					case CTRL_QUIT: onEventGameOver(); break;
 				}
@@ -83,7 +84,7 @@ int main()
 	GAME = game_create();
 	game_register_event_handler(GAME, EVENT_STATS_CHANGED, onEventStatsChanged);
 	game_register_event_handler(GAME, EVENT_BOARD_CHANGED, onEventBoardChanged);
-	game_register_event_handler(GAME, EVENT_PIECE_CHANGED, onEventPieceChanged);
+	game_register_event_handler(GAME, EVENT_NEXT_PIECE_CHANGED, onEventNextPieceChanged);
 	game_register_event_handler(GAME, EVENT_GAME_OVER, onEventGameOver);
 
 	VIEW = createView();

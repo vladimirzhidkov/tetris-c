@@ -113,9 +113,6 @@ void tetromino_rotate_ccw( tetromino_t *tetromino)
 }
 
 
-/*
- ******************** GETTERS ******************** 
- */
 
 int tetromino_get_x( tetromino_t *this )
 {
