@@ -2,6 +2,8 @@
 #define WBOARD_H
 
 #include <ncurses.h>
+#include <stdint.h>
+
 #include "board.h"
 #include "scaling.h"
 
@@ -16,5 +18,5 @@
 WINDOW * wboard_new( int y, int x );
 void wboard_free( WINDOW * );
 
-void wboard_update( WINDOW *, char *board );
+void wboard_update( WINDOW *, u_int8_t *board );
 #endif // WBOARD_H

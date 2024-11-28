@@ -4,8 +4,8 @@
 #include <ncurses.h>
 
 
-#define WINSTRUCTIONS_HEIGHT 5
-#define WINSTRUCTIONS_WIDTH 20
+#define WINSTRUCTIONS_HEIGHT 7
+#define WINSTRUCTIONS_WIDTH 30
 
 WINDOW * winstructions_new( int y, int x );
 void winstructions_free( WINDOW * );

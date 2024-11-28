@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include <stdlib.h>
-
+#include <stdint.h>
 #include "game.h"
 #include "view.h"
 
@@ -32,14 +32,13 @@ void onEventStatsChanged( void )
 
 void onEventBoardChanged( void )
 {
-	char* board = game_get_board(GAME);
-
+	u_int8_t *board = game_get_board(GAME);
 	update_board(VIEW, board);
 }
 
 void onEventNextPieceChanged( void )
 {
-	char* nextTetromino = game_get_next_shape(GAME);
+	u_int8_t *nextTetromino = game_get_next_shape(GAME);
 	update_nextpiece(VIEW, nextTetromino);
 }
 

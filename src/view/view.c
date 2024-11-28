@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ncurses.h>
-
+#include <stdint.h>
 #include "view.h"
 #include "wboard.h"
 #include "wnextpiece.h"
@@ -50,12 +50,12 @@ void view_free(view_t *this)
 	free(this);
 }
 
-void update_board(view_t *this, char *board)
+void update_board(view_t *this, u_int8_t *board)
 {
 	wboard_update(this->wBoard, board);
 }
 
-void update_nextpiece(view_t *this, char *piece)
+void update_nextpiece(view_t *this, u_int8_t *piece)
 {
 	wnextpiece_update(this->wNextPiece, piece);
 }

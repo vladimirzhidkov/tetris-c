@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <ncurses.h>
+#include <stdint.h>
 
 #include "wnextpiece.h"
 #include "scaling.h"
@@ -17,15 +18,14 @@ void wnextpiece_free( WINDOW *this)
 	delwin(this);
 }
 
-
-void wnextpiece_update( WINDOW *this, char* piece )
+void wnextpiece_update( WINDOW *this, u_int8_t *piece )
 {
-    char *frame = malloc( FRAME_NEXTPIECE_LEN );
+    u_int8_t *frame = malloc( FRAME_NEXTPIECE_LEN );
     scale_up( piece, frame, TETROMINO_SIZE, TETROMINO_SIZE );
 
 	wmove(this, 0, 0);
 	wattrset(this, A_BOLD);
-	waddstr(this, "Next");
+	waddstr(this, "Next:");
 	wmove(this, 1, 0);
 	for (int i = 0; i < FRAME_NEXTPIECE_LEN; ++i)
 	{

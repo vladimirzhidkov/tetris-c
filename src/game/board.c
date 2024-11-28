@@ -6,7 +6,7 @@
 struct board_t
 {
 	board_bytemap_t *board; 
-	board_bytemap_t *snapshot; // board with active tetromino merged with it
+	board_bytemap_t *snapshot; // board with active tetromino merged into it
 };
 
 board_t* board_new( void )

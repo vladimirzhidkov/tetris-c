@@ -1,6 +1,7 @@
 #ifndef GAME_H 
 #define GAME_H
 
+#include <stdint.h>
 #include "events.h"
 
 typedef struct game_t game_t;
@@ -17,8 +18,8 @@ void game_rotate_piece_cw( game_t * );
 void game_rotate_piece_ccw( game_t * );
 
 /* getters */
-char* game_get_board( game_t * );
-char* game_get_next_shape( game_t * );
+u_int8_t * game_get_board( game_t * );
+u_int8_t * game_get_next_shape( game_t * );
 
 /* event handlers */
 void game_register_event_handler( game_t *, event_t type, event_handler_fn handler );

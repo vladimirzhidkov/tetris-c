@@ -1,10 +1,11 @@
+#include <stdint.h>
 #include "scaling.h"
 
-void scale_up( char* src, char* dst, int src_height, int src_width )
+void scale_up( u_int8_t *src, u_int8_t *dst, int src_height, int src_width )
 {
 	int dst_width = src_width * SCALING_WIDTH;
-	char (*s)[src_width] = (char (*)[src_width])src;
-	char (*d)[dst_width] = (char (*)[dst_width])dst;
+	u_int8_t (*s)[src_width] = (u_int8_t (*)[src_width])src;
+	u_int8_t (*d)[dst_width] = (u_int8_t (*)[dst_width])dst;
 
 	for (int src_row = 0; src_row < src_height; src_row++)
 	{

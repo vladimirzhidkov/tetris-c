@@ -2,6 +2,8 @@
 #define WNEXTPIECE_H
 
 #include <ncurses.h>
+#include <stdint.h>
+
 #include "scaling.h"
 #include "tetromino_bytemap.h"
 
@@ -15,6 +17,6 @@
 WINDOW * wnextpiece_new( int y, int x );
 void wnextpiece_free( WINDOW * );
 
-void wnextpiece_update( WINDOW *, char* piece );
+void wnextpiece_update( WINDOW *, u_int8_t *piece );
 
 #endif // WNEXTPIECE_H

@@ -2,6 +2,7 @@
 #define VIEW_H
 
 #include <ncurses.h>
+#include <stdint.h>
 
 #include "wboard.h"
 #include "wnextpiece.h"
@@ -11,7 +12,7 @@
 #define WBOARD_Y	    	0
 #define WBOARD_X	        0	
 
-#define WNEXTPIECE_Y		1
+#define WNEXTPIECE_Y		0
 #define WNEXTPIECE_X		WBOARD_X + WBOARD_WIDTH
 
 #define WSTATS_Y		    WNEXTPIECE_Y + WNEXTPIECE_HEIGHT 
@@ -25,8 +26,8 @@ typedef struct view_t view_t;
 view_t* view_new( void );
 void view_free( view_t * );
 
-void update_board( view_t *, char* board );
-void update_nextpiece( view_t *, char* piece );
+void update_board( view_t *, u_int8_t *board );
+void update_nextpiece( view_t *, u_int8_t *piece );
 void update_stats( view_t *, int level, int lines, int score );
 
 #endif // VIEW_H

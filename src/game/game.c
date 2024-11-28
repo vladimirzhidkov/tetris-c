@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <time.h>
+#include <stdint.h>
 
 #include "game.h"
 #include "stats.h"
@@ -17,24 +18,6 @@ struct game_t
 	stats_t *stats;
 	events_t *events;
 };
-
-static void spawn_piece( game_t* this )
-{
-	tetromino_spawn( this->tetromino, (BOARD_WIDTH - TETROMINO_SIZE) / 2, 0);
-	bool is_collided = board_detect_collision( this->board, this->tetromino );
-
-	if ( is_collided )
-	{
-		events_trigger( this->events, EVENT_GAME_OVER );
-	}
-	else
-	{
-		events_trigger( this->events, EVENT_NEXT_PIECE_CHANGED );
-	}
-}	
-/*
- ******************** PUBLIC METHODS ******************** 
- */
 
 game_t* game_new( void )
 {
@@ -57,9 +40,20 @@ void game_free( game_t* this )
 	free(this);
 }
 
-/*
- ******************** ACTIONS ******************** 
- */
+static void spawn_piece( game_t* this )
+{
+	tetromino_spawn( this->tetromino, (BOARD_WIDTH - TETROMINO_SIZE) / 2, 0);
+	bool is_collided = board_detect_collision( this->board, this->tetromino );
+
+	if ( is_collided )
+	{
+		events_trigger( this->events, EVENT_GAME_OVER );
+	}
+	else
+	{
+		events_trigger( this->events, EVENT_NEXT_PIECE_CHANGED );
+	}
+}	
 
 void game_move_piece_left( game_t* this )
 {
@@ -154,18 +148,15 @@ void game_drop_piece( game_t* this )
 	events_trigger( this->events, EVENT_BOARD_CHANGED );
 }
 
-
-
-// TODO: replace board with background
-char* game_get_board( game_t* this )
+u_int8_t * game_get_board( game_t* this )
 {
-	char* body = (char *)board_generate_snapshot(this->board, this->tetromino);
+	u_int8_t *body = (u_int8_t *) board_generate_snapshot(this->board, this->tetromino);
 	return body;
 }
 
-char* game_get_next_shape( game_t* this )
+u_int8_t * game_get_next_shape( game_t* this )
 {
-	char *shape = (char *)tetromino_get_next_shape(this->tetromino);
+	u_int8_t *shape = (u_int8_t *)tetromino_get_next_shape(this->tetromino);
 	return shape;
 }
 
@@ -173,12 +164,6 @@ void game_register_event_handler( game_t* this, event_t type, event_handler_fn h
 {
 	events_register( this->events, type, handler );
 }
-
-
-
-/*
- ******************** STATS ******************** 
- */
 
 int game_get_score( game_t* this )
 {
