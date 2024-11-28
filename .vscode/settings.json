@@ -4,12 +4,17 @@
         "shared.h": "c",
         "model.h": "c",
         "stats.h": "c",
-        "tetromino.h": "c"
+        "tetromino.h": "c",
+        "tetropool.h": "c",
+        "tetromino_bytemap.h": "c",
+        "board.h": "c",
+        "utils.h": "c",
+        "wnextpiece.h": "c",
+        "frame.h": "c"
     },
     "editor.fontSize": 14,
     "files.autoSave": "afterDelay",
     "C_Cpp.default.includePath": [
-        "${workspaceFolder}/**",
-        "${workspaceFolder}/include"
+        "${workspaceFolder}/include/**"
     ]
 }

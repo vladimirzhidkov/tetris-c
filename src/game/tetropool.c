@@ -6,7 +6,7 @@
 
 struct tetropool_t
 {
-	tetromino_shape_t pool[TETROPOOL_SIZE];
+	tetromino_bytemap_t pool[TETROPOOL_SIZE];
 	int size;
 };
 
@@ -26,7 +26,7 @@ void tetropool_free( tetropool_t *this )
 	free(this);
 }
 
-tetromino_shape_t* tetropool_get_random_shape( tetropool_t *this )
+tetromino_bytemap_t* tetropool_get_random_shape( tetropool_t *this )
 {
 	int index = rand() % this->size;
 	return &this->pool[index];

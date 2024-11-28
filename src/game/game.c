@@ -156,11 +156,10 @@ void game_drop_piece( game_t* this )
 
 
 
-
-
+// TODO: replace board with background
 char* game_get_board( game_t* this )
 {
-	char* body = board_generate_snapshot(this->board, this->tetromino);
+	char* body = (char *)board_generate_snapshot(this->board, this->tetromino);
 	return body;
 }
 

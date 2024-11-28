@@ -1,16 +1,18 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include <stdlib.h>
+
 #include "game.h"
 #include "view.h"
 
-
 #define CTRL_QUIT 'q'
+#define CTRL_DROP ' '
+
 #define DELAY_BASE_MS 1000
 #define DELAY_REDUCTION_MS 90
 
 game_t* GAME;
-View* VIEW;
+view_t* VIEW;
 
 long long current_time_ms( void )
 {
@@ -25,20 +27,20 @@ void onEventStatsChanged( void )
 	int lines_cleared = game_get_cleared_lines_count( GAME );
 	int score = game_get_score( GAME );
 
-	renderStats(VIEW, level, lines_cleared, score);
+	update_stats(VIEW, level, lines_cleared, score);
 }
 
 void onEventBoardChanged( void )
 {
 	char* board = game_get_board(GAME);
 
-	renderBoard(VIEW, board);
+	update_board(VIEW, board);
 }
 
 void onEventNextPieceChanged( void )
 {
 	char* nextTetromino = game_get_next_shape(GAME);
-	renderNextPiece(VIEW, nextTetromino);
+	update_nextpiece(VIEW, nextTetromino);
 }
 
 void onEventGameOver( void )
@@ -67,9 +69,9 @@ void startGameLoop( void )
 				{
 					case KEY_LEFT: game_move_piece_left(GAME); break;
 					case KEY_RIGHT: game_move_piece_right(GAME); break;
-					case KEY_DOWN: game_move_piece_down(GAME); break;
-					case ' ': game_drop_piece(GAME); break;
 					case KEY_UP: game_rotate_piece_cw(GAME); break;
+					case KEY_DOWN: game_move_piece_down(GAME); break;
+					case CTRL_DROP: game_drop_piece(GAME); break;
 					case CTRL_QUIT: onEventGameOver(); break;
 				}
 			}
@@ -79,22 +81,21 @@ void startGameLoop( void )
 	}
 }
 
-int main()
+int main( void )
 {
 	GAME = game_new();
 	game_register_event_handler(GAME, EVENT_STATS_CHANGED, onEventStatsChanged);
 	game_register_event_handler(GAME, EVENT_BOARD_CHANGED, onEventBoardChanged);
 	game_register_event_handler(GAME, EVENT_NEXT_PIECE_CHANGED, onEventNextPieceChanged);
 	game_register_event_handler(GAME, EVENT_GAME_OVER, onEventGameOver);
-
-	VIEW = view_new();
-	renderNextPiece(VIEW, game_get_next_shape(GAME));
-	renderInstructions(VIEW, "q - quit");
-	renderBoard(VIEW, game_get_board(GAME));
 	int level = game_get_level( GAME );
 	int lines_cleared = game_get_cleared_lines_count( GAME );
 	int score = game_get_score( GAME );
-	renderStats(VIEW, level, lines_cleared, score);
+
+	VIEW = view_new();
+	update_board(VIEW, game_get_board(GAME));
+	update_nextpiece(VIEW, game_get_next_shape(GAME));
+	update_stats(VIEW, level, lines_cleared, score);
 
 	startGameLoop();
 	return 0;

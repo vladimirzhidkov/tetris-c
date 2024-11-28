@@ -5,14 +5,37 @@
 struct tetromino_t
 {
 	tetropool_t *tetropool;
-	tetromino_shape_t *active_shape;
-	tetromino_shape_t *next_shape;
+	tetromino_bytemap_t *active_shape;
+	tetromino_bytemap_t *next_shape;
 	int x;
 	int y;
 	int size;
 };
 
-static void transpose( tetromino_shape_t *shape)
+tetromino_t* tetromino_new( int x, int y )
+{
+	tetromino_t* this = (tetromino_t*)malloc( sizeof( tetromino_t ) );
+	tetropool_t* pool = tetropool_new();
+	*this = (tetromino_t) {
+		.tetropool = pool,
+		.active_shape = tetropool_get_random_shape(pool),
+		.next_shape = tetropool_get_random_shape(pool),
+		.x = x,
+		.y = y,
+		.size = TETROMINO_SIZE
+    };
+	return this;
+}
+
+void tetromino_free( tetromino_t *this )
+{
+	tetropool_free( this->tetropool );
+	free( this );
+}
+
+
+
+static void transpose( tetromino_bytemap_t *shape)
 {
 	for (int i = 0; i < TETROMINO_SIZE; i++)
 	{
@@ -25,7 +48,7 @@ static void transpose( tetromino_shape_t *shape)
 	}
 }
 
-static void reverse_rows( tetromino_shape_t *shape)
+static void reverse_rows( tetromino_bytemap_t *shape)
 {
 	for (int i = 0; i < TETROMINO_SIZE; i++)
 	{
@@ -38,7 +61,7 @@ static void reverse_rows( tetromino_shape_t *shape)
 	}
 }
 
-static void reverse_cols( tetromino_shape_t *shape)
+static void reverse_cols( tetromino_bytemap_t *shape)
 {
 	for (int i = 0; i < TETROMINO_SIZE; i++)
 	{
@@ -50,30 +73,6 @@ static void reverse_cols( tetromino_shape_t *shape)
 		}
 	}
 }
-
-
-tetromino_t* tetromino_new( int x, int y )
-{
-	tetromino_t* this = (tetromino_t*)malloc( sizeof( tetromino_t ) );
-    tetropool_t* pool = tetropool_new();
-    *this = (tetromino_t) {
-        .tetropool = pool,
-        .active_shape = tetropool_get_random_shape(pool),
-        .next_shape = tetropool_get_random_shape(pool),
-        .x = x,
-        .y = y,
-        .size = TETROMINO_SIZE
-    };
-	return this;
-}
-
-void tetromino_free( tetromino_t *this )
-{
-	tetropool_free( this->tetropool );
-	free( this );
-}
-
-
 
 void tetromino_spawn( tetromino_t *this, int x, int y )
 {
@@ -127,12 +126,12 @@ int tetromino_get_y( tetromino_t *this )
 	return this->y;
 }
 
-tetromino_shape_t* tetromino_get_active_shape( tetromino_t *this )
+tetromino_bytemap_t* tetromino_get_active_shape( tetromino_t *this )
 {
 	return this->active_shape;
 }
 
-tetromino_shape_t* tetromino_get_next_shape( tetromino_t *this )
+tetromino_bytemap_t* tetromino_get_next_shape( tetromino_t *this )
 {
 	return this->next_shape;
 }

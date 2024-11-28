@@ -1,6 +1,7 @@
 #ifndef TETROPOOL_H
 #define TETROPOOL_H
-#include "tetromino.h"
+
+#include "tetromino_bytemap.h"
 
 /* tetromino pool */
 #define TETROPOOL_SIZE 7
@@ -46,6 +47,9 @@ tetropool_t* tetropool_new( void );
 void tetropool_free( tetropool_t * );
 
 /* Actions */
-tetromino_shape_t* tetropool_get_random_shape( tetropool_t * );
+tetromino_bytemap_t* tetropool_get_random_shape( tetropool_t * );
 
 #endif /* TETROPOOL_H */
+
+
+
